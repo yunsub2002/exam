@@ -1,0 +1,984 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Speak Up IH v2 (노트북)</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Gothic+A1:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: 앱 셸 — 데스크톱 좌측 레일 / 모바일 하단 탭바. 메인 컬러는 마닐라 만(灣) 해질녘: 딥 블루 + 망고 옐로, 대화 말풍선이 주인공 */
+:root{
+ --bg:#F2F4F9;--surface:#FFFFFF;--ink:#101B33;--sub:#56627D;--mut:#8C96AD;--line:#E1E6F0;
+ --brand:#2443B8;--brand-soft:#E5EAFB;--sun:#FFB21E;--sun-soft:#FFF3D6;--sun-ink:#7A4B00;
+ --ok:#0E8F6A;--ok-soft:#E1F5EE;--bad:#C93A30;--bad-soft:#FCE7E4;--bubble-me:#2443B8;--on-brand:#FFFFFF;
+ --f-disp:'Outfit','Gothic A1',sans-serif;--f-body:'Gothic A1','Malgun Gothic','Apple SD Gothic Neo',sans-serif;--f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0B1222;--surface:#141D33;--ink:#EAF0FB;--sub:#A8B3CC;--mut:#77829C;--line:#243152;--brand:#8EA6FF;--brand-soft:#1C2A52;--sun:#FFC24D;--sun-soft:#3A2C0C;--sun-ink:#FFDB8A;--ok:#4FD3A6;--ok-soft:#12352A;--bad:#FF8C80;--bad-soft:#3C1916;--bubble-me:#3552C9;--on-brand:#0B1222;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0B1222;--surface:#141D33;--ink:#EAF0FB;--sub:#A8B3CC;--mut:#77829C;--line:#243152;--brand:#8EA6FF;--brand-soft:#1C2A52;--sun:#FFC24D;--sun-soft:#3A2C0C;--sun-ink:#FFDB8A;--ok:#4FD3A6;--ok-soft:#12352A;--bad:#FF8C80;--bad-soft:#3C1916;--bubble-me:#3552C9;--on-brand:#0B1222;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+.shell{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+nav.rail{position:sticky;top:0;height:100vh;padding:22px 14px;border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:4px;padding-left:max(14px,env(safe-area-inset-left,0px))}
+.logo{font-family:var(--f-disp);font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0 8px 18px;display:flex;align-items:center;gap:8px}
+.logo i{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--sun);color:#101B33;font-style:normal;font-size:14px}
+.logo small{display:block;font-family:var(--f-body);font-weight:600;font-size:11px;color:var(--mut);letter-spacing:.04em}
+nav button.tab{all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-weight:600;font-size:14px;color:var(--sub)}
+nav button.tab:hover{background:var(--bg)}
+nav button.tab.on{background:var(--brand-soft);color:var(--brand)}
+nav button.tab:focus-visible{outline:2px solid var(--brand)}
+nav .ic{width:20px;text-align:center;font-size:16px}
+.rail .foot{margin-top:auto;font-size:12px;color:var(--mut);padding:0 8px}
+main{min-width:0;padding-block:26px 90px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font-family:var(--f-disp);font-size:30px;line-height:1.2;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h2{font-size:18px;margin:0 0 10px;text-wrap:balance}
+h3{font-size:15px;margin:0 0 6px}
+p{margin:0}
+.lead{color:var(--sub);max-width:68ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi b{display:block;font-family:var(--f-disp);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi span{font-size:12.5px;color:var(--sub)}
+.btn{font:inherit;font-weight:700;font-size:14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{border-color:var(--brand);color:var(--brand)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.btn.pri:hover{filter:brightness(1.08);color:var(--on-brand)}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:#101B33}
+.btn.sm{font-size:12.5px;padding:6px 11px;border-radius:9px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--brand-soft);color:var(--brand)}
+.tag.sun{background:var(--sun-soft);color:var(--sun-ink)}.tag.ok{background:var(--ok-soft);color:var(--ok)}.tag.bad{background:var(--bad-soft);color:var(--bad)}
+.hero{background:var(--ink);color:var(--bg);border-radius:20px;padding:26px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:20px;align-items:center;border:0}
+.hero h1{color:var(--bg)}
+.hero p{color:var(--mut);margin-top:8px}
+.levels{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.levels span{font-family:var(--f-mono);font-size:11.5px;padding:4px 8px;border-radius:6px;background:rgba(127,140,170,.18);color:var(--mut)}
+.levels span.t{background:var(--sun);color:#101B33;font-weight:700}
+.joycard{background:var(--surface);color:var(--ink);border-radius:16px;padding:16px;display:flex;gap:12px;align-items:flex-start}
+.av{flex:none;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--sun),#FF7A59);display:grid;place-items:center;font-family:var(--f-disp);font-weight:800;color:#101B33;font-size:18px}
+.mission{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.mission:first-of-type{border-top:0}
+.mission .ck{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+.mission.done .ck{background:var(--ok);border-color:var(--ok);color:var(--on-brand)}
+.mission div{flex:1;min-width:0}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px}
+.week i{height:34px;border-radius:8px;background:var(--bg);display:grid;place-items:center;font-style:normal;font-size:11px;color:var(--mut)}
+.week i.on{background:var(--sun);color:#101B33;font-weight:700}
+/* 공략집 */
+.toc{display:flex;gap:8px;flex-wrap:wrap}
+.guide h2{font-family:var(--f-disp);font-size:20px}
+.guide table{width:100%;border-collapse:collapse;font-size:14px}
+.guide th,.guide td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.guide th{font-size:12.5px;color:var(--sub);font-weight:700}
+.tw{overflow-x:auto}
+.formula{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.formula div{background:var(--bg);border-radius:12px;padding:12px}
+.formula b{display:block;font-family:var(--f-disp);color:var(--brand)}
+.formula span{font-size:13px;color:var(--sub)}
+ul.li{margin:0;padding-left:18px}ul.li li{margin-bottom:6px}
+/* 대화 */
+.chatwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.chat{display:flex;flex-direction:column;height:min(70vh,640px);padding:0;overflow:hidden}
+.chathead{display:flex;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.chathead .st{font-size:12px;color:var(--ok)}
+.msgs{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px;background:var(--bg)}
+.msg{display:flex;gap:10px;max-width:86%}
+.msg .av{width:34px;height:34px;font-size:13px}
+.msg .bub{background:var(--surface);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px;min-width:0}
+.msg.me{align-self:flex-end;flex-direction:row-reverse}
+.msg.me .bub{background:var(--bubble-me);color:#fff;border-color:transparent;border-radius:16px 4px 16px 16px}
+.bub .tools{display:flex;gap:6px;margin-top:6px}
+.bub .tools button{all:unset;cursor:pointer;font-size:12px;color:var(--brand);font-weight:700}
+.msg.me .bub .tools button{color:#DDE4FF}
+.fix{margin-top:8px;background:var(--sun-soft);color:var(--sun-ink);border-radius:10px;padding:8px 10px;font-size:13px}
+.fix b{color:inherit}
+.fix s{opacity:.7}
+.composer{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);align-items:flex-end;background:var(--surface)}
+.composer textarea{flex:1;min-width:0;font:inherit;font-size:15px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);color:var(--ink);resize:none;height:46px;max-height:140px}
+.mic{width:46px;height:46px;border-radius:50%;border:0;background:var(--sun);color:#101B33;font-size:18px;cursor:pointer;flex:none}
+.inp{display:block;width:100%;margin-top:4px;font:inherit;font-size:13.5px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg);color:var(--ink)}
+.hfst{padding:8px 16px;font-size:13px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-bottom:1px solid var(--line)}
+.btn.stop{background:var(--bad);border-color:var(--bad);color:#fff}
+.mic.rec{background:var(--bad);color:#fff;animation:pulse 1.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(201,58,48,.5)}100%{box-shadow:0 0 0 14px rgba(201,58,48,0)}}
+.side .card+.card{margin-top:12px}
+.topicbtns{display:flex;flex-wrap:wrap;gap:6px}
+.note{font-size:12.5px;color:var(--sub);background:var(--bg);border-radius:10px;padding:10px}
+/* 모의고사 */
+.qbox{font-size:18px;line-height:1.6;font-family:var(--f-disp);font-weight:500}
+.qbox.hide{filter:blur(6px);user-select:none}
+.timer{font-family:var(--f-mono);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.prog{height:6px;background:var(--bg);border-radius:4px;overflow:hidden}.prog i{display:block;height:100%;background:var(--brand)}
+textarea.ans{width:100%;min-height:150px;font:inherit;font-size:15px;line-height:1.7;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);color:var(--ink)}
+.survey{display:flex;flex-wrap:wrap;gap:8px}
+.survey label{display:flex;gap:6px;align-items:center;background:var(--bg);border-radius:10px;padding:8px 12px;font-size:14px;cursor:pointer}
+.res{border-top:1px solid var(--line);padding:14px 0}
+.res:first-child{border-top:0}
+.mini{font-family:var(--f-mono);font-size:12px;color:var(--sub)}
+/* 모범답안 */
+.mlist{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
+.mitems{display:flex;flex-direction:column;gap:6px;position:sticky;top:16px}
+.mitems button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;font-weight:600;font-size:14px;color:var(--sub);background:var(--surface);border:1px solid var(--line)}
+.mitems button.on{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
+.sent{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:10px;cursor:pointer}
+.sent:hover{background:var(--bg)}
+.sent.play{background:var(--sun-soft)}
+.sent .n{font-family:var(--f-mono);font-size:11px;color:var(--mut);margin-top:3px;flex:none;width:18px}
+.sent p{font-size:16px;line-height:1.7}
+mark.k{background:var(--sun-soft);color:var(--sun-ink);border-radius:4px;padding:0 3px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:700;font-size:13.5px;z-index:30;max-width:90vw}
+@media (max-width:960px){.chatwrap,.mlist{grid-template-columns:1fr}.mitems{position:static;flex-direction:row;flex-wrap:wrap}.hero{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.formula{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){
+ .shell{grid-template-columns:1fr}
+ nav.rail{position:fixed;inset:auto 0 0 0;top:auto;height:auto;flex-direction:row;justify-content:space-around;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--line);z-index:20;gap:0}
+ nav .logo,.rail .foot{display:none}
+ nav button.tab{flex-direction:column;gap:2px;font-size:10.5px;padding:6px 4px;flex:1;text-align:center;align-items:center}
+ .g2,.g3{grid-template-columns:1fr}
+ h1{font-size:25px}
+ .chat{height:calc(100vh - 210px)}
+}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+/* 통화 모드 (v2) */
+[hidden]{display:none!important}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;line-height:1.4}
+.chk input{margin-top:3px;flex:none}
+.chat.incall{height:min(84vh,780px)}
+.call{border-top:1px solid var(--line);background:var(--surface);padding:16px 16px 12px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.orb{position:relative;width:78px;height:78px;display:grid;place-items:center;margin-top:4px}
+.orb .av{width:70px;height:70px;font-size:26px;position:relative;z-index:1}
+.orb::before,.orb::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:3px solid transparent}
+.call[data-s=listening] .orb::before{border-color:var(--ok);animation:ring 1.5s ease-out infinite}
+.call[data-s=listening] .orb::after{border-color:var(--ok);opacity:.35}
+.call[data-s=speaking] .orb::before{border-color:var(--sun);animation:ring .8s ease-out infinite}
+.call[data-s=speaking] .orb::after{border-color:var(--sun);animation:ring .8s ease-out .4s infinite}
+.call[data-s=thinking] .orb::before{border-color:var(--brand);border-right-color:transparent;border-bottom-color:transparent;animation:spin .8s linear infinite}
+@keyframes ring{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cstate{font-weight:700;font-size:12.5px;color:var(--sub);text-align:center;min-height:19px}
+.cap{width:100%;max-width:680px;min-height:56px;max-height:120px;overflow-y:auto;text-align:center;font-family:var(--f-disp);font-weight:500;font-size:19px;line-height:1.45;color:var(--ink)}
+.cap.me{color:var(--brand)}
+.cbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.cbtns .btn.on{background:var(--sun);border-color:var(--sun);color:#101B33}
+.ct{font-family:var(--f-mono);font-weight:600;opacity:.85}
+.kb{font-size:11px;opacity:.8}
+.hints{display:flex;flex-direction:column;gap:6px;width:100%;max-width:680px}
+.hint{all:unset;cursor:pointer;background:var(--sun-soft);color:var(--sun-ink);border-radius:10px;padding:8px 12px;font-size:14px;line-height:1.45}
+.hint:focus-visible{outline:2px solid var(--brand)}
+.hint span{display:block;font-size:12px;opacity:.85;margin-top:2px}
+.btn.glow{border-color:var(--sun);animation:glow 1.4s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,178,30,.0)}50%{box-shadow:0 0 0 6px rgba(255,178,30,.35)}}
+.fix.say{background:var(--ok-soft);color:var(--ok)}
+.fix .rp{all:unset;cursor:pointer;font-size:12px;margin-left:2px}
+.kotag{font-size:12px}
+.dots{display:inline-flex;gap:4px;padding:4px 2px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--mut);animation:dot 1s infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.report{position:fixed;inset:0;background:rgba(8,14,30,.55);display:grid;place-items:center;z-index:40;padding:16px}
+.report>.card{width:100%;max-width:580px;max-height:88vh;overflow-y:auto}
+.report .fix{margin-top:8px}
+.report .tools button{all:unset;cursor:pointer;font-size:12px;font-weight:700;color:inherit;margin-right:10px}
+@media (max-width:760px){.chat.incall{height:calc(100vh - 150px)}.cap{font-size:17px}}
+@media (prefers-reduced-motion:reduce){.orb::before,.orb::after,.dots i,.btn.glow{animation:none!important}}
+</style>
+</head><body><div class="shell">
+ <nav class="rail" id="rail" aria-label="메뉴">
+  <div class="logo"><i>IH</i><div>Speak Up IH<small>OPIc 스피킹 코치</small></div></div>
+ </nav>
+ <main><div class="page" id="page"></div></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script>
+
+// ===== 문제 은행 =====
+// t: 주제, s: 설문(서베이) 주제 여부, q: [묘사, 루틴/비교, 경험]
+const TOPICS={
+ home:{ko:'집 · 거주지',s:true,q:["I would like to know where you live. Describe your home to me. What does it look like? How many rooms are there?","What do you usually do at home on weekdays and on weekends? Tell me about your daily routine at home.","Has your home changed over the years? Tell me about a memorable change or something special that happened at your home."]},
+ town:{ko:'동네 · 이웃',s:true,q:["Tell me about the neighborhood you live in. What does it look like and what kinds of places are there?","Talk about the people in your neighborhood. What do you usually do together?","How has your neighborhood changed since you first moved there? Give me as many details as possible."]},
+ jog:{ko:'조깅 · 러닝',s:true,q:["You indicated that you go jogging. Where do you usually go jogging and why do you like that place?","Describe your typical jogging routine. What do you do before, during and after you run?","Tell me about a memorable experience you had while jogging. What happened and how did you feel?"]},
+ park:{ko:'공원 가기',s:true,q:["You said you like going to parks. Describe your favorite park. What does it look like?","What do you usually do when you go to the park? Who do you go with?","Tell me about a special or unexpected experience you had at a park."]},
+ movie:{ko:'영화 보기',s:true,q:["You indicated that you enjoy watching movies. What kinds of movies do you like and why?","Describe what you usually do when you go to the movies, from start to finish.","Tell me about the most memorable movie you have seen recently. What was it about and why was it memorable?"]},
+ music:{ko:'음악 감상',s:true,q:["What kind of music do you like to listen to? Who are your favorite singers or musicians?","When and where do you usually listen to music? What devices do you use?","How has your taste in music changed since you were young? Tell me about it in detail."]},
+ travel:{ko:'해외여행',s:true,q:["Tell me about a country or city you have visited abroad. What was it like?","What do you usually do to prepare for an overseas trip? Describe the process.","Tell me about a memorable experience from an overseas trip. Something funny, surprising or difficult."]},
+ staycation:{ko:'집에서 보내는 휴가',s:true,q:["When you have time off, what do you usually do at home? Who do you spend time with?","Tell me about the last vacation you spent at home. What did you do each day?","Have you ever had an unexpected problem during a vacation at home? What happened?"]},
+ work:{ko:'회사 · 업무',s:true,q:["Tell me about your company and your job. What do you do at work?","Describe a typical day at your workplace, from the morning until you leave.","Tell me about a challenging project you worked on. What was the problem and how did you solve it?"]},
+ tech:{ko:'돌발: 기술 · 인터넷',s:false,q:["What kinds of technology do you use every day? How do they help you?","How has the technology people use changed compared to ten years ago?","Tell me about a time when a piece of technology did not work properly. What did you do?"]},
+ recycle:{ko:'돌발: 재활용',s:false,q:["Describe how people recycle in your country. What items do they separate?","What do you personally do to recycle at home? Describe the process.","Has recycling changed in your country over the years? What do you think about it?"]},
+ weather:{ko:'돌발: 날씨 · 계절',s:false,q:["Describe the weather in your country. How is each season different?","What do people usually do in your country during the summer and the winter?","Tell me about a memorable experience related to extreme weather."]}
+};
+const ROLEPLAYS=[
+ {ko:'헬스장 · 러닝 크루 문의',q:["I'd like to give you a situation and ask you to act it out. You want to join a running club in your town. Call the club and ask three or four questions to get the information you need.","Unfortunately, you hurt your ankle and cannot attend the first session you paid for. Call the club, explain the situation, and suggest two or three alternatives.","Have you ever had a problem that made you change your plans? Tell me what happened and how you handled it."]},
+ {ko:'호텔 · 여행 예약',q:["You are planning a family trip and want to book a hotel. Call the hotel and ask three or four questions about the rooms and facilities.","When you arrive at the hotel, you find out your reservation was cancelled by mistake. Explain the situation to the staff and offer two or three solutions.","Tell me about a time when something went wrong during a trip. What happened and how did you solve it?"]},
+ {ko:'콘서트 · 영화 예매',q:["You want to see a movie with a friend this weekend. Call the theater and ask three or four questions about the movie and tickets.","You bought tickets, but you realize they are for the wrong date. Call the theater, explain the problem, and suggest some solutions.","Tell me about a time you had to cancel or change an appointment. What happened?"]}
+];
+const SOCIAL=[
+ "Compare the parks or public places in your country now with the ones from ten years ago. What changes have you noticed?",
+ "Many companies are using AI and automation these days. What are the advantages and concerns people talk about?",
+ "People today travel abroad more than before. Why do you think this has changed, and what impact does it have?",
+ "What are some issues people in your country talk about regarding housing? Explain in detail."
+];
+const ASK_EXAMINER="This is the last role-play. I also like going on trips. Ask me three or four questions about my trips.";
+
+// ===== 모범답안 (IH 목표, 본인 맞춤) =====
+const MODELS=[
+ {id:'intro',ko:'자기소개',q:"Let's start the interview now. Tell me a little bit about yourself.",a:
+"Sure. Hi, my name is Yunsub, and I'm in my late thirties. I live in Daegu with my wife and our two little kids. I've been working in the auto parts industry for about thirteen years, mainly in production management. Basically, my job is to make sure our factory makes the right parts, at the right time, at the right cost. It can be pretty stressful, but I really enjoy solving problems on the shop floor. These days I'm also building some automation dashboards with AI tools, which is honestly a lot of fun. When I'm not working, I love running. I usually run about eight to ten kilometers in the morning, and I finished a half marathon in two hours. On weekends, I try to spend as much time as possible with my kids. So yeah, that's pretty much me — a busy dad who loves running and fixing things.",
+ k:["I'm in my late thirties","Basically, my job is to ~","It can be pretty stressful, but ~","So yeah, that's pretty much me"]},
+ {id:'home',ko:'집 묘사',q:TOPICS.home.q[0],a:
+"Okay, so I live in an apartment in Dalseo-gu, Daegu. It's on the twelfth floor, so the view is actually pretty nice, especially at night. When you walk in, there's a small hallway, and then the living room opens up on your left. The living room is the heart of our home. We have a big sofa, a TV, and honestly, a lot of toys, because we have two kids. There are three bedrooms: one for my wife and me, one for the kids, and a small room that I use as a study. That's where I work on my laptop late at night. The kitchen is connected to the living room, so I can watch the kids while my wife or I cook. It's not a fancy place, but it's cozy and full of family memories. I'd say the best part is the big window in the living room. Sunlight comes in all morning, and it just makes me feel relaxed.",
+ k:["When you walk in, ~","~ is the heart of our home","It's not a fancy place, but it's cozy","I'd say the best part is ~"]},
+ {id:'jog',ko:'조깅 · 장소와 루틴',q:TOPICS.jog.q[1],a:
+"Running is a big part of my life, so I have a pretty fixed routine. I usually get up around five thirty, before the kids wake up. First, I drink a glass of water and do some light stretching for about five minutes, because I hurt my knee once when I skipped it. Then I head to the river trail near my apartment. I start slowly for the first kilometer, and then I pick up the pace. Most days I run about eight to ten kilometers, and I listen to podcasts or some upbeat music while I run. When I get back home, I stretch again, take a quick shower, and have breakfast with my family. To be honest, it's not always easy to get out of bed, especially in winter. But once I start running, my head gets clear, and I can plan my whole day. I really think running makes me a better dad and a better worker.",
+ k:["I have a pretty fixed routine","First, ~ Then, ~ When I get back, ~","I pick up the pace","To be honest, it's not always easy to ~"]},
+ {id:'jogexp',ko:'조깅 · 기억에 남는 경험',q:TOPICS.jog.q[2],a:
+"Oh, I remember my first half marathon really clearly. It was about a year ago, in the spring. I had been training for about three months, but the night before the race, I could hardly sleep because I was so nervous. On the day of the race, the weather was perfect, and there were thousands of runners. The first ten kilometers went really well, and I was feeling confident. But around the fifteen-kilometer mark, my legs started to cramp, and I honestly thought about giving up. Then I saw a group of people cheering on the side of the road, and one little kid shouted, 'You can do it!' That really gave me energy. I slowed down a little, kept going, and finally crossed the finish line in just under two hours. When I saw my wife and kids waiting for me, I almost cried. It was one of the proudest moments of my life.",
+ k:["I remember ~ really clearly","I had been training for ~","around the ~ mark","I almost cried","one of the proudest moments of my life"]},
+ {id:'travel',ko:'해외여행 · 경험',q:TOPICS.travel.q[2],a:
+"Let me tell you about our family trip to Sapporo in Japan. We went there in winter because my kids had never seen that much snow before. The trip itself was amazing — we ate soup curry, went to the Otaru canal, and the kids played in the snow almost every day. But on the third day, something unexpected happened. We were supposed to take a train to Otaru, but there was a huge snowstorm, and all the trains were delayed. The station was packed, and my younger kid started crying because he was cold and tired. I was pretty stressed out, but I tried to stay calm. I found a staff member and asked about other options in my broken Japanese and English. In the end, we took a bus instead, and it actually turned out to be a beautiful ride through the snowy hills. Looking back, that delay became our favorite memory of the trip.",
+ k:["Let me tell you about ~","something unexpected happened","We were supposed to ~","In the end, ~","Looking back, ~"]},
+ {id:'work',ko:'회사 · 업무',q:TOPICS.work.q[0],a:
+"I work for an auto parts manufacturer that supplies parts to global car makers. I'm in the production management team, and my job covers a lot of things. First of all, I make production plans, which means I decide how many parts each line should make every week. I also manage inventory and costs. For example, I check the material cost of our products every month and find items that are losing money. Recently, I've been focusing on automation. I built a few dashboards that automatically calculate production plans, delivery schedules, and material costs. Before that, people had to do everything manually in Excel, and it took days. Now it takes just a few minutes. Of course, my job isn't only about data. I spend a lot of time on the shop floor talking with workers, because the real answers are always there. I'd say my job is challenging, but it's really rewarding.",
+ k:["my job covers a lot of things","First of all, ~ For example, ~","Recently, I've been focusing on ~","Of course, ~ isn't only about ~","challenging, but really rewarding"]},
+ {id:'workexp',ko:'업무 · 어려운 프로젝트',q:TOPICS.work.q[2],a:
+"The most challenging project I've worked on was improving one of our machining lines. The line had fourteen machines spread out all over the place, so workers had to walk a lot, and our labor costs were way too high. My job was to lead a team and fix it. At first, people were really worried, because changing the line meant fewer workers would be needed. So I spent weeks on the line, measuring every process with a stopwatch. Then we combined some processes, moved the machines closer together, and added a simple conveyor. The hardest part wasn't the technical stuff — it was convincing people. I showed everyone the same data and explained the benefits clearly. In the end, we went from twenty-nine workers to twenty-one, and we saved about three hundred thirty million won a year. I learned that numbers are important, but trust is even more important.",
+ k:["The most challenging project I've worked on was ~","At first, people were really worried","The hardest part wasn't ~ — it was ~","In the end, we went from A to B","I learned that ~"]},
+ {id:'park',ko:'공원 · 묘사',q:TOPICS.park.q[0],a:
+"My favorite park is a riverside park about ten minutes from my apartment. It's long and narrow because it follows the river. On one side, there's a wide running and bike path, and on the other side, there are grass fields where families have picnics. There's also a small playground, which is basically my kids' favorite place in the world. In spring, cherry blossom trees line the path, and it looks absolutely stunning. In the evening, the lights along the bridge turn on, and the whole place looks really romantic. I go there almost every day, either for my morning run or for a walk with my family after dinner. What I like most is that it's never too crowded, so I can really relax. I think it's one of the best things about living in my neighborhood.",
+ k:["It's long and narrow because ~","On one side, ~ and on the other side, ~","basically my kids' favorite place in the world","What I like most is that ~"]},
+ {id:'staycation',ko:'집에서 보내는 휴가',q:TOPICS.staycation.q[1],a:
+"My last vacation at home was during the Chuseok holidays. We didn't travel because the roads were too crowded, so we decided to have a staycation. On the first day, I just slept in, which almost never happens. Then we made pancakes for breakfast with the kids, and the kitchen turned into a total mess. The next day, we visited my mother, who lives nearby, and had a big family dinner. On the third day, we stayed home and had a movie marathon. We watched three animated movies in a row and ate way too much popcorn. I also caught up on some reading. On the last day, I went for a long run and cleaned the house. Honestly, it wasn't anything special, but it was exactly what I needed. Sometimes doing nothing is the best vacation.",
+ k:["I just slept in","turned into a total mess","in a row","caught up on ~","Sometimes doing nothing is ~"]},
+ {id:'tech',ko:'돌발 · 기술 변화 비교',q:TOPICS.tech.q[1],a:
+"Technology has changed a lot compared to ten years ago. Back then, smartphones were already popular, but people mainly used them for calls, messages, and maybe some social media. These days, smartphones do almost everything. We pay with them, we work with them, and we even control our home appliances with them. At work, the change is even bigger. Ten years ago, I made all my reports by hand in Excel. Now I use AI tools to build dashboards that update automatically. It saves me hours every week. Of course, there are some downsides. People spend too much time on their phones, and kids get used to screens too early. I try to set rules at home, like no phones at the dinner table. Overall, I think technology has made our lives much more convenient, but we need to use it wisely.",
+ k:["compared to ten years ago","Back then, ~ These days, ~","the change is even bigger","Of course, there are some downsides","Overall, I think ~"]},
+ {id:'rp1',ko:'롤플레이 · 질문하기',q:ROLEPLAYS[0].q[0],a:
+"Hi, I'm calling because I saw your running club's poster in the park, and I'm interested in joining. I have a few questions, if you don't mind. First, when and where do you usually meet? I work full-time, so I'm wondering if you have early morning or weekend sessions. Second, how much is the membership fee, and is it paid monthly or for the whole season? Also, I'm not a beginner, but I'm not super fast either. I can run ten kilometers in about fifty-five minutes. Do you have different groups for different levels? And lastly, is there anything I need to prepare before the first session, like special shoes or a health check? Okay, that's all. Thank you so much for your help. I'm really looking forward to running with you.",
+ k:["I'm calling because ~","I have a few questions, if you don't mind","I'm wondering if ~","And lastly, ~","That's all. Thank you so much"]},
+ {id:'rp2',ko:'롤플레이 · 문제 해결',q:ROLEPLAYS[1].q[1],a:
+"Hi, excuse me. I have a reservation under the name Hwang for three nights, but the front desk told me it was cancelled. I have the confirmation email right here on my phone, so I think there must be some mistake. I'm traveling with my wife and two young kids, and they're really tired, so this is a bit of a problem. Let me suggest a few options. First, if you have any family room available tonight, could you give it to us at the same price? Second, if the hotel is fully booked, could you help us find a similar hotel nearby and cover the taxi fare? Or third, if we have to stay somewhere else tonight, could we move back here tomorrow and get a small discount? I really appreciate your help. I just want my kids to get some rest as soon as possible.",
+ k:["I have a reservation under the name ~","there must be some mistake","Let me suggest a few options","could you ~ at the same price?","I really appreciate your help"]},
+ {id:'social',ko:'사회 이슈 · AI와 자동화',q:SOCIAL[1],a:
+"That's a really interesting topic, and it's actually related to my job. Many companies, including mine, are using AI and automation more and more. The biggest advantage is efficiency. Work that used to take days can now be done in minutes, and there are fewer human errors. For example, at my company, planning reports that took a whole day are now created automatically. But people also have real concerns. The biggest one is jobs. Some people worry that machines will replace workers, especially in factories. Another concern is that companies might depend too much on systems they don't fully understand. Personally, I think AI should be a tool that helps people, not something that replaces them. The key is to retrain workers and let them focus on more meaningful work. If we do that well, everyone can benefit.",
+ k:["That's a really interesting topic","The biggest advantage is ~","But people also have real concerns","Personally, I think ~ should be ~, not ~","The key is to ~"]}
+];
+// ===== 표현 뱅크 =====
+const PHRASES=[
+ {g:'시작 · 시간 벌기',x:["Oh, that's a good question. Let me think for a second.","Hmm, how should I put this?","Well, to be honest with you, ~","Let me tell you about ~"]},
+ {g:'묘사 · 나열',x:["When you walk in, the first thing you notice is ~","On one side, ~ and on the other side, ~","What I like most about it is that ~","It's not fancy, but it's really cozy."]},
+ {g:'과거 경험 (시제)',x:["I remember it like it was yesterday.","We were supposed to ~, but ~","Out of nowhere, ~","At that moment, I realized ~","Looking back, ~"]},
+ {g:'비교 · 변화',x:["Compared to ten years ago, ~","Back then, ~ but these days, ~","The biggest difference is that ~","It has changed a lot in terms of ~"]},
+ {g:'감정 · 생각',x:["I was really stressed out, but I tried to stay calm.","It was one of the proudest moments of my life.","I couldn't believe my eyes.","Personally, I think ~"]},
+ {g:'롤플레이',x:["I'm calling because ~","I have a few questions, if you don't mind.","I'm afraid there's a problem with ~","Let me suggest a few options.","Would it be possible to ~?"]},
+ {g:'마무리',x:["So yeah, that's pretty much it.","Anyway, that's my story.","Overall, it was a great experience.","I hope that answers your question."]}
+];
+
+// ================= 공통 =================
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const TABS=[['home','🏠','홈'],['guide','📘','IH 공략집'],['joy','💬','Joy 프리토킹'],['mock','🎧','실전 모의고사'],['model','🗣️','모범답안 · 쉐도잉'],['phr','✨','표현 뱅크']];
+let tab='home';try{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))tab=h}catch(e){}
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+let ST={days:{},words:0,sessions:0,mocks:[],exam:'',chat:[]};
+try{Object.assign(ST,JSON.parse(localStorage.getItem('sui')||'{}'))}catch(e){}
+function save(){try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}}
+function day(){const k=todayKey();ST.days[k]=ST.days[k]||{talk:0,shadow:0,mockq:0,words:0};return ST.days[k]}
+function addWords(t){const n=(t.trim().match(/[A-Za-z']+/g)||[]).length;ST.words+=n;day().words+=n;save();return n}
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2200)}
+function streak(){let n=0;const d=new Date();for(;;){const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const v=ST.days[k];if(v&&(v.talk||v.shadow||v.mockq)){n++;d.setDate(d.getDate()-1)}else{if(n===0&&k===todayKey()){d.setDate(d.getDate()-1);continue}break}if(n>400)break}return n}
+
+// ================= 음성 (TTS / STT) =================
+// v2: 자연음성(Natural/Neural) 우선 선택 + 문장 단위 큐 재생(크롬 15초 끊김 방지, 스트리밍 응답을 바로 읽기)
+let VOICE=null,VOICE_NAME='';try{VOICE_NAME=localStorage.getItem('sui_voice')||''}catch(e){}
+let SILENCE=1500;try{SILENCE=+localStorage.getItem('sui_sil')||1500}catch(e){}
+function enVoices(){if(!('speechSynthesis' in window))return[];return speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang))}
+function voiceScore(v){let s=0;if(/natural|neural|online/i.test(v.name))s+=50;if(/en[-_]PH/i.test(v.lang))s+=30;if(/google/i.test(v.name))s+=20;if(/en[-_]US/i.test(v.lang))s+=10;if(/rosa|ava|emma|jenny|aria|samantha|zira|female/i.test(v.name))s+=5;return s}
+function pickVoice(){const vs=enVoices();if(!vs.length)return;VOICE=(VOICE_NAME&&vs.find(v=>v.name===VOICE_NAME))||vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0]||null;fillVoiceSel()}
+function fillVoiceSel(){const s=document.getElementById('vSel');if(!s)return;const vs=enVoices().slice().sort((a,b)=>voiceScore(b)-voiceScore(a));s.innerHTML=vs.map(v=>`<option value="${esc(v.name)}" ${VOICE&&v.name===VOICE.name?'selected':''}>${esc(v.name.replace(/^Microsoft /,'').replace(/ - English/,' ·'))} (${esc(v.lang)})</option>`).join('')||'<option>기본 음성</option>'}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+let RATE=1;try{RATE=+localStorage.getItem('sui_rate')||1}catch(e){}
+const TT={q:[],busy:false,closed:true,done:null,cur:'',gen:0,rate:null,keep:[]};
+let onTTS=null;function ttsUI(){onTTS&&onTTS(TT.cur)}
+function cleanTTS(s){return String(s||'').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu,'').replace(/[*_#`]/g,'').replace(/\s+/g,' ').trim()}
+function splitSents(t){return (cleanTTS(t).match(/[^.!?]+[.!?]+["')\]]*|[^.!?]+$/g)||[]).map(s=>s.trim()).filter(Boolean)}
+function ttsCancel(){TT.gen++;TT.q=[];TT.busy=false;TT.cur='';TT.done=null;TT.closed=true;if('speechSynthesis' in window)window.speechSynthesis.cancel();ttsUI()}
+function ttsStart(onDone,rate){ttsCancel();TT.closed=false;TT.done=onDone||null;TT.rate=rate||null}
+function ttsPush(s){s=cleanTTS(s);if(!s)return;TT.q.push(s);ttsPump()}
+function ttsClose(){TT.closed=true;ttsPump()}
+function ttsPump(){
+ if(TT.busy)return;
+ if(!TT.q.length){if(TT.closed){TT.cur='';ttsUI();if(TT.done){const d=TT.done;TT.done=null;d()}}return}
+ const s=TT.q.shift(),g=TT.gen;TT.busy=true;TT.cur=s;ttsUI();
+ if(!('speechSynthesis' in window)){TT.busy=false;setTimeout(ttsPump,0);return}
+ let guard=null;const next=()=>{if(g!==TT.gen)return;clearTimeout(guard);TT.busy=false;ttsPump()};
+ const u=new SpeechSynthesisUtterance(s);if(VOICE)u.voice=VOICE;u.lang=VOICE?VOICE.lang:'en-US';u.rate=TT.rate||RATE;u.onend=next;u.onerror=next;
+ TT.keep.push(u);if(TT.keep.length>30)TT.keep.shift();
+ guard=setTimeout(next,s.length*110/u.rate+6000);
+ try{speechSynthesis.resume()}catch(_){}speechSynthesis.speak(u)}
+function speak(text,onend,rate){if(!('speechSynthesis' in window)){toast('이 환경은 음성 재생을 지원하지 않습니다');onend&&onend();return}ttsStart(onend,rate);splitSents(text).forEach(ttsPush);ttsClose()}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,recOn=false;
+function listen(onText,onStop){
+ if(!SR){toast('여기서는 음성 인식을 쓸 수 없어 타이핑으로 연습합니다. PC 크롬/엣지에서 HTML 파일로 열면 마이크가 켜집니다.');return false}
+ try{rec=new SR();rec.lang='en-US';rec.interimResults=true;rec.continuous=true;let fin='';
+  rec.onresult=e=>{let inter='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript+' ';else inter+=r[0].transcript}onText((fin+inter).trim())};
+  rec.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;toast(e.error==='not-allowed'?'마이크 권한이 막혀 있습니다. 타이핑으로 연습하세요.':'음성 인식 오류: '+e.error)};
+  rec.onend=()=>{recOn=false;onStop&&onStop(fin.trim())};rec.start();recOn=true;return true}catch(e){toast('음성 인식을 시작하지 못했습니다');return false}}
+function stopListen(){try{rec&&rec.stop()}catch(e){}recOn=false}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ================= AI (Claude) =================
+let AI=null,AIready=false;
+// ---- 노트북(로컬 HTML) 모드: Anthropic API 키로 직접 호출 ----
+let KEY='',MODEL_Q='claude-haiku-4-5',MODEL_D='claude-sonnet-4-5',AI_MODE='';
+try{KEY=localStorage.getItem('sui_key')||'';MODEL_Q=localStorage.getItem('sui_mq')||MODEL_Q;MODEL_D=localStorage.getItem('sui_md')||MODEL_D}catch(e){}
+function makeLocalAI(){
+ const URL_='https://api.anthropic.com/v1/messages';
+ async function post(body){let res;
+  try{res=await fetch(URL_,{method:'POST',headers:{'content-type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)})}
+  catch(e){const er=new Error('network');er.code='network';throw er}
+  if(!res.ok){let msg='';try{msg=((await res.json()).error||{}).message||''}catch(_){}const er=new Error(msg||('HTTP '+res.status));er.code=res.status===401?'bad_key':res.status===429?'rate_limited':res.status===404?'bad_model':'http';er.detail=msg;throw er}
+  return res}
+ async function call(prompt,opts={}){
+  const model=opts.modelTier==='quick'?MODEL_Q:MODEL_D;
+  const res=await post({model,max_tokens:opts.max||1200,messages:[{role:'user',content:prompt}]});
+  const j=await res.json();return {text:(j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('')}}
+ const f=(p,o)=>call(p,o);
+ f.json=async(p,o)=>{const r=await call(p+'\n\nReturn ONLY valid JSON. No markdown fences.',{...(o||{}),max:(o&&o.max)||3000});const j=parseJSON(r.text);if(!j){const er=new Error('bad json');er.code='bad_json';throw er}return j};
+ // 스트리밍: 첫 문장이 오자마자 Joy가 말하기 시작 → 체감 대기시간 대폭 감소
+ f.stream=async(prompt,opts={},onText)=>{
+  const model=opts.modelTier==='quick'?MODEL_Q:MODEL_D;
+  const res=await post({model,max_tokens:opts.max||700,stream:true,messages:[{role:'user',content:prompt}]});
+  if(!res.body||!res.body.getReader){const j=await res.json();const t=(j.content||[]).map(c=>c.text||'').join('');onText&&onText(t);return {text:t}}
+  const rd=res.body.getReader(),dec=new TextDecoder();let buf='',full='';
+  for(;;){const {value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+   while((i=buf.indexOf('\n'))>=0){const line=buf.slice(0,i).trim();buf=buf.slice(i+1);if(!line.startsWith('data:'))continue;
+    let j=null;try{j=JSON.parse(line.slice(5).trim())}catch(_){continue}
+    if(j.type==='content_block_delta'&&j.delta&&j.delta.type==='text_delta'){full+=j.delta.text;onText&&onText(full)}
+    else if(j.type==='error'){const er=new Error((j.error&&j.error.message)||'stream error');er.code='http';er.detail=er.message;throw er}}}
+  return {text:full}};
+ return f}
+async function aiStream(prompt,opts,onText){if(AI&&AI.stream)return AI.stream(prompt,opts,onText);const r=await AI(prompt,opts);onText&&onText(r.text||'');return r}
+(async()=>{try{if(window.claude&&claude.use){AI=await claude.use('sample');AI_MODE='claude'}}catch(e){AI=null}if(!AI&&KEY){AI=makeLocalAI();AI_MODE='key'}AIready=true;if(tab==='home'||tab==='joy'||tab==='mock')setTimeout(render,0)})();
+const ME="Yunsub, a Korean production manager in his late 30s at an auto-parts maker in Daegu, father of two young kids, loves running (half marathon in 2 hours), went on a winter family trip to Sapporo, builds AI automation dashboards at work";
+function parseJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e){}}return null}
+function aiErr(e){if(e&&e.code==='bad_key')return 'API 키가 올바르지 않습니다. Joy 탭 > AI 연결에서 다시 입력하세요.';if(e&&e.code==='bad_model')return '모델 이름을 찾을 수 없습니다: '+(e.detail||'');if(e&&e.code==='network')return '인터넷 연결(또는 회사 방화벽)로 AI 서버에 닿지 못했습니다. 기본 모드로 이어갑니다.';if(e&&e.code==='http')return 'AI 오류: '+(e.detail||e.message);return e&&e.code==='not_granted'?'AI 사용이 허용되지 않아 기본 모드로 진행합니다.':e&&e.code==='rate_limited'?'잠시 후 다시 시도해 주세요 (요청이 많습니다).':'AI 응답을 받지 못했습니다. 기본 모드로 이어갑니다.'}
+
+// ================= 렌더링 =================
+function nav(){$('#rail').innerHTML=`<div class="logo"><i>IH</i><div>Speak Up IH<small>OPIc 스피킹 코치</small></div></div>`+TABS.map(t=>`<button type="button" class="tab ${t[0]===tab?'on':''}" data-tab="${t[0]}"><span class="ic">${t[1]}</span><span>${t[2]}</span></button>`).join('')+`<div class="foot">목표 등급 <b>IH</b><br>기록은 이 브라우저에 저장됩니다.</div>`}
+function render(){if(CALL.on)endCall(true);stopListen();ttsCancel();document.querySelectorAll('.report').forEach(x=>x.remove());nav();({home:pHome,guide:pGuide,joy:pJoy,mock:pMock,model:pModel,phr:pPhr})[tab]();window.scrollTo(0,0)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;try{history.replaceState(null,'','#'+tab)}catch(_){}render()}});
+
+// ---------- 홈 ----------
+function pHome(){
+ const d=day();const dd=ST.exam?Math.ceil((new Date(ST.exam)-new Date(todayKey()))/864e5):null;const last=ST.mocks[ST.mocks.length-1];
+ const week=[];const now=new Date();for(let i=6;i>=0;i--){const x=new Date(now);x.setDate(now.getDate()-i);const k=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');const v=ST.days[k];week.push(`<i class="${v&&(v.talk||v.shadow||v.mockq)?'on':''}">${'일월화수목금토'[x.getDay()]}</i>`)}
+ const ms=[[d.talk>=10,'Joy와 프리토킹 10문장',`${Math.min(d.talk,10)}/10 문장`,'joy'],[d.shadow>=1,'모범답안 1개 쉐도잉',`${Math.min(d.shadow,1)}/1`,'model'],[d.mockq>=3,'모의고사 3문항 답하기',`${Math.min(d.mockq,3)}/3`,'mock']];
+ $('#page').innerHTML=`
+ <section class="card hero">
+  <div><span class="tag sun">TARGET · OPIc IH</span><h1 style="margin-top:10px">문단으로 말하고,<br>시제를 지키고, 롤플레이를 풀어내면 IH.</h1>
+   <p>매일 15분: Joy 선생님과 프리토킹 → 모범답안 쉐도잉 → 실전 문항 3개. 기록이 쌓이면 등급이 보입니다.</p>
+   <div class="levels">${['NL','NM','NH','IL','IM1','IM2','IM3','IH','AL'].map(x=>`<span class="${x==='IH'?'t':''}">${x}</span>`).join('')}</div></div>
+  <div class="joycard"><div class="av">J</div><div><b>Teacher Joy</b> <span class="mini">· Manila</span><p style="font-size:14px;margin-top:4px;color:var(--sub)">"Hi Yunsub! How was your run this morning? Tell me everything, I'm all ears!"</p><button class="btn pri sm" data-tab="joy" style="margin-top:10px">지금 대화 시작</button></div></div>
+ </section>
+ <div class="grid g4">
+  <div class="card kpi"><b>${dd==null?'—':dd>=0?'D-'+dd:'완료'}</b><span>시험일 <input id="exam" type="date" value="${esc(ST.exam)}" style="font:inherit;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);padding:2px 4px"></span></div>
+  <div class="card kpi"><b>${streak()}일</b><span>연속 학습</span></div>
+  <div class="card kpi"><b>${ST.words.toLocaleString()}</b><span>지금까지 말한 영어 단어</span></div>
+  <div class="card kpi"><b>${last?esc(last.level||'—'):'—'}</b><span>최근 모의고사 예상 등급</span></div>
+ </div>
+ <div class="grid g2">
+  <div class="card"><h2>오늘의 미션</h2>${ms.map(m=>`<div class="mission ${m[0]?'done':''}"><span class="ck">${m[0]?'✓':''}</span><div><b>${m[1]}</b><div class="mini">${m[2]}</div></div><button class="btn sm" data-tab="${m[3]}">하기</button></div>`).join('')}
+   <h3 style="margin-top:14px">이번 주</h3><div class="week">${week.join('')}</div></div>
+  <div class="card"><h2>환경 상태</h2>
+   <div class="mission"><span class="ck" style="${AI?'background:var(--ok);border-color:var(--ok);color:var(--on-brand)':''}">${AI?'✓':''}</span><div><b>AI 선생님 (Claude)</b><div class="mini">${!AIready?'확인 중…':AI?'연결됨'+(AI_MODE==='key'?' (내 API 키)':'')+' · 자유 대화, 문장 교정, 모의고사 채점 사용 가능':'오프라인 Joy 모드 · 키워드 반응 대화 + 기본 문법 교정 (API 키 불필요)'}</div></div></div>
+   <div class="mission"><span class="ck" style="${SR?'background:var(--ok);border-color:var(--ok);color:var(--on-brand)':''}">${SR?'✓':''}</span><div><b>음성 인식 (마이크)</b><div class="mini">${SR?'사용 가능 · 🎤 버튼으로 말하면 자동 받아쓰기':'이 화면에서는 꺼져 있음 · 타이핑으로 연습 (PC 크롬에서 HTML 파일로 열면 사용 가능)'}</div></div></div>
+   <div class="mission"><span class="ck" style="${'speechSynthesis' in window?'background:var(--ok);border-color:var(--ok);color:var(--on-brand)':''}">${'speechSynthesis' in window?'✓':''}</span><div><b>원어민 음성 재생</b><div class="mini">${VOICE?esc(VOICE.name)+' ('+esc(VOICE.lang)+')':'기본 영어 음성'} · 속도 <select id="rate" style="font:inherit;font-size:12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px">${[0.8,0.9,1,1.1].map(r=>`<option ${r===RATE?'selected':''} value="${r}">${r}x</option>`).join('')}</select></div></div></div>
+   ${ST.mocks.length?`<h3 style="margin-top:12px">모의고사 기록</h3>${ST.mocks.slice(-5).reverse().map(m=>`<div class="row mini" style="justify-content:space-between"><span>${esc(m.date)} · ${m.n}문항 · 평균 ${m.wpm} WPM</span><span class="tag ${/IH|AL/.test(m.level||'')?'ok':''}">${esc(m.level||'자가평가')}</span></div>`).join('')}`:''}
+  </div>
+ </div>`;
+ $('#exam').onchange=e=>{ST.exam=e.target.value;save();render()};
+ $('#rate').onchange=e=>{RATE=+e.target.value;try{localStorage.setItem('sui_rate',RATE)}catch(_){}speak("Hi Yunsub, this is how I sound now.")};
+}
+
+// ---------- 공략집 ----------
+function pGuide(){
+ $('#page').innerHTML=`<div><span class="tag">OPIc IH 총 공략집</span><h1 style="margin-top:8px">IH는 '외운 답'이 아니라 '문단으로 이어지는 이야기'에서 나옵니다</h1><p class="lead" style="margin-top:8px">시험 구조 → 설문·난이도 전략 → 답변 공식 → 유형별 공략 → 4주 플랜 순서입니다. 본인 이력(생산관리 · 러닝 · 두 아이 · 삿포로 가족여행)에 맞춰 짰습니다.</p></div>
+ <div class="toc">${['구조','등급','설문','난이도','공식','유형','감점','플랜','당일'].map((t,i)=>`<a class="btn sm" href="#g${i}">${t}</a>`).join('')}</div>
+ <section class="card guide" id="g0"><h2>1. 시험 구조 한눈에</h2><div class="tw"><table>
+  <tr><th>항목</th><th>내용</th></tr>
+  <tr><td>시간 · 문항</td><td>약 40분, 15문항 (난이도 1~2 선택 시 12문항). 문항별 답변 시간 제한은 없지만 전체 시간 안에 끝내야 합니다.</td></tr>
+  <tr><td>질문 듣기</td><td>질문은 음성으로만 나오고, 문항마다 한 번 더 들을 수 있습니다. 앱의 모의고사도 같은 방식(최대 2회 재생)입니다.</td></tr>
+  <tr><td>사전 설문</td><td>설문에서 고른 주제가 15문항 중 7~8개 정도 출제되고 나머지는 돌발 주제입니다.</td></tr>
+  <tr><td>난이도</td><td>시작 전 1~6단계 중 선택, 시험 중간에 쉽게/비슷하게/어렵게 한 번 재조정합니다.</td></tr>
+  <tr><td>문항 흐름 (난이도 5~6 기준 예시)</td><td>1번 자기소개 → 2~10번 주제별 3문항 콤보(묘사 → 루틴/비교 → 경험) → 11~13번 롤플레이(질문하기 → 문제 해결 → 관련 경험) → 14~15번 비교·사회 이슈 또는 면접관에게 질문하기</td></tr>
+ </table></div></section>
+ <section class="card guide" id="g1"><h2>2. 등급 체계와 IH의 기준</h2><div class="tw"><table>
+  <tr><th>등급</th><th>말하는 수준</th><th>나에게 의미</th></tr>
+  <tr><td>IM1~IM3</td><td>문장 단위로 일상 주제를 말함, 문장들이 잘 이어지지 않음</td><td>"답은 하는데 이야기가 아니다"</td></tr>
+  <tr><td><b>IH</b></td><td><b>문단 단위</b>로 묘사·서술, <b>과거·현재·미래 시제</b>를 오가며 말하고, 예상 못한 상황(롤플레이 문제 해결)도 대체로 처리</td><td>목표. 실수가 있어도 흐름이 끊기지 않으면 됨</td></tr>
+  <tr><td>AL</td><td>모든 시제에서 일관되게 문단을 유지, 사회적 이슈까지 논리적으로 설명</td><td>IH 이후 도전</td></tr>
+ </table></div><p class="note" style="margin-top:10px">IH의 핵심 3가지: ① 한 답변이 1분 30초~2분 동안 끊기지 않는 문단 ② 경험 문항에서 과거 시제 유지 ③ 롤플레이 문제 해결에서 대안 2~3개 제시.</p></section>
+ <section class="card guide" id="g2"><h2>3. 사전 설문 추천 조합 (맞춤)</h2><p class="lead">설문은 "내가 진짜 이야기할 수 있는 것"으로 고르고, 서로 겹치는 주제로 묶어 준비량을 줄입니다.</p><div class="tw" style="margin-top:10px"><table>
+  <tr><th>설문 항목</th><th>추천 선택</th><th>이유</th></tr>
+  <tr><td>직업</td><td>사업/회사 · 재직 중 · 관리직 아님(또는 해당 시 선택)</td><td>회사 · 업무 문항을 생산관리 경험으로 풀 수 있음</td></tr>
+  <tr><td>학생 여부</td><td>아니오 · 수강 후 5년 이상</td><td>학교 관련 문항 제거</td></tr>
+  <tr><td>거주</td><td>가족과 함께 아파트 거주</td><td>집 · 동네 · 이웃 답변을 실제 생활로</td></tr>
+  <tr><td>여가</td><td>영화 보기 · 공원 가기 · 카페 가기</td><td>공원 = 러닝 코스로 연결</td></tr>
+  <tr><td>취미</td><td>음악 감상</td><td>러닝 중 음악 · 출퇴근 음악으로 연결</td></tr>
+  <tr><td>운동</td><td>조깅 · 걷기</td><td>하프 마라톤 경험이 강력한 경험 답변</td></tr>
+  <tr><td>휴가 · 출장</td><td>국내 여행 · 해외 여행 · 집에서 보내는 휴가</td><td>삿포로 가족여행, 명절 집콕 휴가</td></tr>
+ </table></div><p class="note" style="margin-top:10px">묶음 전략: 공원 ↔ 조깅 ↔ 걷기 ↔ 음악 = 같은 강변 공원 이야기 하나로 4개 주제를 커버합니다.</p></section>
+ <section class="card guide" id="g3"><h2>4. 난이도 선택 전략</h2><ul class="li">
+  <li>IH 목표라면 <b>5단계</b>로 시작하는 것이 일반적인 권장입니다(5와 6은 강사마다 의견이 갈림).</li>
+  <li>중간 재조정에서는 <b>"비슷하게"</b>를 고르는 것을 기본으로 하되, 앞부분이 잘 풀렸다면 유지, 많이 막혔다면 무리하게 올리지 않습니다.</li>
+  <li>난이도가 높을수록 비교 · 사회 이슈 문항이 나옵니다. 앱의 [모범답안 · 사회 이슈]로 미리 대비하세요.</li></ul></section>
+ <section class="card guide" id="g4"><h2>5. 답변 공식 — MBC + 시간 배분</h2><div class="formula">
+  <div><b>Intro · 10초</b><span>질문 받아주기<br>"Oh, that's a good question. Let me tell you about ~"</span></div>
+  <div><b>Main · 20초</b><span>한 문장 결론<br>"My favorite park is a riverside park near my place."</span></div>
+  <div><b>Body · 60초</b><span>디테일 3개 · 예시 · 감정<br>First / Also / The best part is ~</span></div>
+  <div><b>Close · 10초</b><span>정리 한 줄<br>"So yeah, that's pretty much it."</span></div></div>
+  <p class="note" style="margin-top:10px">경험 문항은 STAR 순서로: 언제·어디서(배경) → 무슨 일이 생겼고(사건) → 어떻게 했고(행동) → 결과와 느낀 점. <b>모든 동사를 과거형으로</b> 유지하는 것이 IH의 분기점입니다.</p></section>
+ <section class="card guide" id="g5"><h2>6. 유형별 공략</h2><div class="tw"><table>
+  <tr><th>유형</th><th>공략</th><th>앱에서 연습</th></tr>
+  <tr><td>자기소개</td><td>채점 비중이 낮다는 의견이 많지만 첫인상. 40초~1분, 직업 · 가족 · 취미 3개로</td><td>모범답안 · 자기소개</td></tr>
+  <tr><td>묘사</td><td>공간은 '들어가면 → 왼쪽/오른쪽 → 가장 좋은 점' 동선으로</td><td>모범답안 · 집, 공원</td></tr>
+  <tr><td>루틴 · 비교</td><td>First, Then, After that 순서어 + 과거와 현재 비교(Back then / These days)</td><td>모범답안 · 조깅 루틴, 기술 변화</td></tr>
+  <tr><td>과거 경험</td><td>시간 · 장소로 시작, 사건의 반전, 감정, 교훈으로 마무리</td><td>모범답안 · 하프 마라톤, 삿포로</td></tr>
+  <tr><td>롤플레이 질문</td><td>상황 설명 1문장 + 질문 3~4개(언제, 얼마, 어떻게, 준비물) + 감사 인사</td><td>모범답안 · 러닝 크루 문의</td></tr>
+  <tr><td>롤플레이 문제 해결</td><td>문제 설명 → 내 상황 → 대안 2~3개(First, Second, Or) → 감사. <b>IH의 핵심 문항</b></td><td>모범답안 · 호텔 예약 취소</td></tr>
+  <tr><td>사회 이슈</td><td>장점 → 우려 → 내 의견 → 해결책 4단 구조</td><td>모범답안 · AI와 자동화</td></tr>
+ </table></div></section>
+ <section class="card guide" id="g6"><h2>7. 감점 요인 · 피해야 할 것</h2><ul class="li">
+  <li><b>긴 침묵</b> — 막히면 "Hmm, how should I put this?" 같은 필러로 시간을 법니다.</li>
+  <li><b>외운 티</b> — 같은 문장을 그대로 낭독하는 느낌. 모범답안은 '뼈대'만 외우고 디테일은 그날 말로.</li>
+  <li><b>시제 혼동</b> — 경험 문항에서 현재형으로 돌아가는 것. 연습 때 동사에 표시해 두기.</li>
+  <li><b>너무 짧은 답</b> — 30초 이하 답변이 반복되면 IM 구간에 머물 가능성이 큽니다.</li>
+  <li><b>질문과 다른 답</b> — 외운 답을 억지로 끼우기. 첫 문장에서 질문 키워드를 반복해 연결.</li>
+  <li><b>한국어 사용</b> — 단어가 생각 안 나면 쉬운 말로 풀어 설명(e.g. "the thing you use to ~").</li></ul></section>
+ <section class="card guide" id="g7"><h2>8. 4주 IH 플랜 (하루 30분 기준)</h2><div class="tw"><table>
+  <tr><th>주차</th><th>목표</th><th>매일 할 것</th></tr>
+  <tr><td>1주</td><td>내 이야기 재료 만들기</td><td>모범답안 2개 쉐도잉 · Joy와 자기소개·집·직업 프리토킹 10분</td></tr>
+  <tr><td>2주</td><td>과거 시제 경험 이야기</td><td>경험 답변 3개(마라톤·삿포로·프로젝트) 말로 녹음 · Joy에게 시제 교정 받기</td></tr>
+  <tr><td>3주</td><td>롤플레이 · 돌발</td><td>롤플레이 질문/문제해결 매일 1세트 · 돌발 주제(기술·재활용·날씨) 1개</td></tr>
+  <tr><td>4주</td><td>실전 감각</td><td>이틀에 한 번 15문항 모의고사 · AI 채점 피드백의 약점 1개씩 보완</td></tr>
+ </table></div></section>
+ <section class="card guide" id="g8"><h2>9. 시험 당일 체크리스트</h2><ul class="li">
+  <li>설문 · 난이도 선택을 미리 정한 대로(5단계 시작) — 현장에서 바꾸지 않기</li>
+  <li>질문은 끝까지 듣고, 키워드 2개를 메모 → 첫 문장에 반복</li>
+  <li>한 문항 1분 30초~2분, 롤플레이 질문하기는 1분 내외</li>
+  <li>막히면 필러 → 쉬운 말로 → 마무리 문장. 침묵만 피하면 됩니다</li></ul>
+  <p class="mini" style="margin-top:12px">참고: 시험 구성 · 난이도 단계 · 응시료(국내 84,000원)는 2026년 8월 기준 나무위키 'OPIc' 문서와 일반적인 시험 안내를 바탕으로 정리했습니다. 최신 일정과 규정은 오픽 공식 사이트(opic.or.kr)에서 확인하세요.</p></section>`;
+}
+
+// ---------- Joy 프리토킹 (v2 · 스픽 스타일 실시간 통화) ----------
+let joyTopic='free',joyBusy=false,autoSpeak=true,BARGE=true;
+try{autoSpeak=localStorage.getItem('sui_auto')!=='0';BARGE=localStorage.getItem('sui_barge')!=='0'}catch(e){}
+const OFFLINE_Q={free:["How was your day today? Tell me what you did from the morning.","What did you do last weekend with your family?","What's something you're looking forward to this month?","Tell me about your job. What was the most interesting thing at work this week?"]};
+Object.keys(TOPICS).forEach(k=>OFFLINE_Q[k]=TOPICS[k].q.slice());
+// ================= 오프라인 Joy 엔진 (API 없이 규칙 기반 자유대화) =================
+// 1) 내 말의 키워드에 반응 → 2) 같은 주제로 꼬리질문 → 3) 자주 틀리는 문법 교정 → 4) IH 코칭 팁
+const ojRand=a=>a[Math.floor(Math.random()*a.length)];
+const OJ_CATS=[
+ {k:'kids',re:/\b(kids?|sons?|daughters?|child|children|baby|babies|family|wife)\b/i,label:'your family',
+  react:["Aww, family time is the best!","Oh, your kids sound so sweet!","Haha, being a dad of two must keep you busy!"],
+  ask:["What did you do with your kids last weekend? Tell me step by step.","How old are your kids now, and what are they into these days?","What was the funniest thing your kids did recently?","How is your life different now compared to before you had kids?","What do you usually do with your family on holidays?"],
+  joy:"Me? I have a big Filipino family, so every Sunday we eat together at my lola's house. It's noisy but so much fun!"},
+ {k:'run',re:/\b(run|runs|running|ran|jog|jogging|marathons?|exercise|workout|gym|races?|5k|10k)\b/i,label:'running',
+  react:["Wow, you're really dedicated to running!","A half marathon in two hours? That's impressive!","Running in the morning sounds so refreshing!"],
+  ask:["Where do you usually run, and what does the course look like?","Tell me about the most memorable race you ever joined. What happened?","How did you first get into running? Tell me how it started.","How has running changed your health or your life?","What do you do before and after you run?","Did you ever get hurt while running? What happened?"],
+  joy:"I try to jog in the mornings too, but Manila is sooo hot and humid. I usually give up after twenty minutes, haha!"},
+ {k:'work',re:/\b(work|works|worked|job|company|office|factory|meetings?|projects?|boss|team|production|dashboards?|automation|ai|overtime|colleagues?|coworkers?|manager)\b/i,label:'your work',
+  react:["Sounds like you've been really busy at work!","Wow, building AI dashboards sounds so cool!","Production management must come with a lot of responsibility!"],
+  ask:["What does a typical workday look like for you, from morning to evening?","Tell me about a problem you solved at work recently. What did you do?","Tell me more about your AI dashboard project. How does it help your team?","How is your job different now compared to when you first started?","What's the hardest part of your job, and how do you deal with it?"],
+  joy:"My job is really fun! I talk with students from Korea and Japan all day. My favorite moment is when someone finally speaks in long sentences!"},
+ {k:'travel',re:/\b(travel|travell?ed|trips?|sapporo|japan|vacation|holidays?|flights?|airport|hotels?|abroad|overseas|tour|visit|visited)\b/i,label:'your trip',
+  react:["Oh, I love travel stories!","Sapporo in winter must have been magical with all that snow!","That sounds like an amazing trip!"],
+  ask:["What was the most memorable moment of the trip? Tell me from the beginning.","Did anything unexpected happen during the trip? What did you do about it?","How was traveling with your kids different from traveling alone?","Where do you want to travel next, and why?","How did you prepare for that trip?"],
+  joy:"I went to Japan once too! I visited Osaka and ate so much takoyaki. But I've never seen real snow, so I'm jealous!"},
+ {k:'food',re:/\b(eat|eats|ate|food|lunch|dinner|breakfast|restaurants?|cook|cooked|cooking|delicious|coffee|meals?|ramen|chicken|beer|snacks?)\b/i,label:'food',
+  react:["Yum, now I'm hungry!","Oh, that sounds delicious!","Haha, food always makes everything better!"],
+  ask:["What did you eat, and how did it taste? Describe it for me.","Who usually cooks at your house, and what's your favorite home-cooked dish?","Tell me about a restaurant you went to recently. What was it like?"],
+  joy:"My favorite food is adobo, chicken cooked in soy sauce and vinegar. And halo-halo for dessert, of course!"},
+ {k:'movie',re:/\b(movies?|films?|netflix|dramas?|cinema|theaters?|watch|watched|series)\b/i,label:'movies',
+  react:["Oh, I love movies too!","That sounds like a good one!"],
+  ask:["What was the last movie you watched? Tell me the story briefly.","Who do you usually watch movies with, and where?","Tell me about a movie that left a strong impression on you. Why was it special?"],
+  joy:"I'm a big fan of romantic comedies. Filipino people love dramas, and we cry together, haha!"},
+ {k:'music',re:/\b(music|songs?|singers?|concerts?|listen|listened|playlist|k-?pop|karaoke)\b/i,label:'music',
+  react:["Music makes everything better!","Oh nice, what a good taste in music!"],
+  ask:["When and where do you usually listen to music?","Tell me about a concert or a special music memory you have.","How has your taste in music changed since you were younger?"],
+  joy:"Filipinos love karaoke! I sing every weekend with my friends. My go-to song is a classic love song, haha!"},
+ {k:'weather',re:/\b(weather|cold|hot|rain|rainy|raining|snow|snowy|winter|summer|spring|fall|autumn|seasons?|humid|warm|windy)\b/i,label:'the weather',
+  react:["Oh, the weather really changes our mood, right?","Brr, that sounds cold!","Haha, I know that feeling!"],
+  ask:["What's the weather like in Daegu these days?","What's your favorite season, and what do you usually do then?","How has the weather in Korea changed compared to when you were a kid?","Tell me about a time when bad weather ruined your plans."],
+  joy:"In Manila we only have two seasons, hot and rainy! So I really want to experience a Korean autumn someday."},
+ {k:'home',re:/\b(home|house|apartment|rooms?|living room|kitchen|sofa|bedroom|neighbou?rhood|neighbors?)\b/i,label:'your home',
+  react:["Home sweet home!","Your place sounds really cozy!"],
+  ask:["Describe your home to me. What's your favorite room and why?","How is your home different from the house you lived in as a child?","What do you usually do at home on weekends?","Have you ever had a problem at home, like something broke? What happened?"],
+  joy:"I live in a small condo in Manila. It's tiny, but I have a little balcony with plants, and I love it!"},
+ {k:'park',re:/\b(parks?|walk|walked|walking|picnic|playground|bikes?|bicycles?|riverside|trail)\b/i,label:'the park',
+  react:["A walk in the park sounds so relaxing!","That sounds like a perfect family outing!"],
+  ask:["Which park do you go to most often? Describe it for me.","What do you usually do at the park, and who do you go with?","Tell me about a memorable day you spent at a park."],
+  joy:"There's a big park near my place in Manila. I go there early in the morning before it gets too hot!"},
+ {k:'tech',re:/\b(phones?|smartphones?|computers?|laptops?|internet|apps?|youtube|chatgpt|claude|technology|online)\b/i,label:'technology',
+  react:["Oh, technology is everywhere these days!","Haha, I can't live without my phone either!"],
+  ask:["How do you use technology at work and at home?","How has technology changed your daily life in the last ten years?","Tell me about a time when technology caused a problem for you."],
+  joy:"I use my laptop all day for online classes. When the internet goes down, I panic, haha!"},
+ {k:'tired',re:/\b(tired|stress|stressed|stressful|busy|exhausted|sick|sleepy|headache)\b/i,label:'that busy day',
+  react:["Oh no, you must be exhausted!","Aww, please take care of yourself, okay?","That sounds really tough."],
+  ask:["What made you so busy this week? Tell me about it.","What usually helps you relieve stress?","How do you relax after a long day?"],
+  joy:"When I'm stressed, I eat ice cream and watch funny videos. It works every time, haha!"},
+ {k:'weekend',re:/\b(weekends?|saturday|sunday|day off|chuseok)\b/i,label:'your weekend',
+  react:["Weekends are the best!","Sounds like a nice weekend!"],
+  ask:["What did you do last weekend? Tell me from morning to night.","What's your ideal weekend like?","How do your weekends now compare to your weekends ten years ago?"],
+  joy:"Last weekend I went to the mall with my sister. In Manila, malls are where everyone goes to escape the heat!"}
+];
+const OJ_GENERIC={react:["Oh, really? That's interesting!","I see! Thanks for sharing that.","Wow, I didn't know that!","Haha, I can totally imagine that!"],
+ ask:["Can you tell me more about that? What happened next?","Why do you think so? Give me one or two reasons.","How did you feel about that?","Can you give me a specific example?","Has it always been like that, or has it changed over time?"]};
+const OJ_PAST={go:'went',goes:'went',eat:'ate',eats:'ate',have:'had',has:'had',take:'took',takes:'took','do':'did',does:'did',see:'saw',sees:'saw',meet:'met',meets:'met',buy:'bought',buys:'bought',make:'made',makes:'made',come:'came',comes:'came',run:'ran',runs:'ran',watch:'watched',watches:'watched',play:'played',plays:'played',visit:'visited',visits:'visited',is:'was',are:'were',am:'was',get:'got',gets:'got',feel:'felt',feels:'felt',think:'thought',drink:'drank',swim:'swam',sleep:'slept',spend:'spent',enjoy:'enjoyed',walk:'walked',cook:'cooked',stay:'stayed',travel:'traveled',fly:'flew',drive:'drove',ride:'rode',say:'said',tell:'told',leave:'left',start:'started',finish:'finished',want:'wanted',like:'liked',love:'loved',bring:'brought',give:'gave',find:'found',know:'knew',study:'studied',work:'worked',live:'lived',talk:'talked',decide:'decided',arrive:'arrived',buy_:'bought'};
+const OJ_ING=v=>({run:'running',jog:'jogging',swim:'swimming',shop:'shopping'}[v]||(v.endsWith('e')&&v!=='see'?v.slice(0,-1)+'ing':v+'ing'));
+const OJ_3S=v=>({have:'has','do':'does',go:'goes',watch:'watches'}[v]||v+'s');
+const OJ_PASTMARK=/\b(yesterday|last (night|week|weekend|month|year|summer|winter|spring|fall|time|sunday|saturday)|\d+ (days?|weeks?|months?|years?) ago|ago|this morning|when i was)\b/i;
+function ojFixes(text){
+ const out=[],seen=new Set();
+ const add=(you,better,why)=>{you=you.trim();better=better.trim();const k=you.toLowerCase();if(!you||k===better.toLowerCase()||seen.has(k))return;seen.add(k);out.push({you,better,why})};
+ const sents=text.split(/(?<=[.!?])\s+|\s*\n+\s*/).filter(Boolean);
+ for(const s of sents){
+  if(OJ_PASTMARK.test(s)){
+   const re=/\b(i|we|they|he|she|it|my \w+|our \w+)\s+(go|goes|eat|eats|have|has|take|takes|do|does|see|sees|meet|meets|buy|buys|make|makes|come|comes|run|runs|watch|watches|play|plays|visit|visits|is|are|am|get|gets|feel|feels|think|drink|swim|sleep|spend|enjoy|walk|cook|stay|travel|fly|drive|ride|say|tell|leave|start|finish|want|like|love|bring|give|find|know|study|work|live|talk|decide|arrive)\b/ig;
+   let m;while((m=re.exec(s))){if(/\b(will|can|could|should|would|to)\s*$/i.test(s.slice(0,m.index)))continue;add(m[0],m[1]+' '+OJ_PAST[m[2].toLowerCase()],'과거 시점(yesterday·last·ago)이면 과거형으로')}
+  }else{
+   const r3=/\b(he|she|my (?:son|daughter|wife|husband|boss|friend|kid|mom|mother|dad|father))\s+(like|go|have|do|want|play|watch|work|live|eat|love|need|know)\b/ig;let m;
+   while((m=r3.exec(s)))add(m[0],m[1]+' '+OJ_3S(m[2].toLowerCase()),'3인칭 단수 주어 + 동사에 -s');
+  }
+ }
+ const RULES=[
+  [/\b(i am|i'm) agree\b/i,()=>'I agree','agree는 동사라 am이 필요 없어요'],
+  [/\b(i am|i'm) (work|live|go|like|want|think|have|love|enjoy|know)\b/i,m=>'I '+m[2],'be동사와 일반동사를 같이 쓰지 않아요'],
+  [/\bvery (like|love|enjoy|want)\b/i,m=>'really '+m[1],'very는 동사를 꾸미지 못해요 → really'],
+  [/\b(i am|i'm|i was|we were|we are) (interesting|boring|exciting|tiring|confusing|surprising|disappointing|satisfying)\b/i,m=>m[1]+' '+{interesting:'interested',boring:'bored',exciting:'excited',tiring:'tired',confusing:'confused',surprising:'surprised',disappointing:'disappointed',satisfying:'satisfied'}[m[2].toLowerCase()],'사람의 감정은 -ed 형태'],
+  [/\bdiscuss about\b/i,()=>'discuss','discuss 뒤에 about 불필요'],
+  [/\b(go|went|come|came|get|got) to home\b/i,m=>m[1]+' home','home 앞에 to 불필요'],
+  [/\b(go|went|come|came) to there\b/i,m=>m[1]+' there','there 앞에 to 불필요'],
+  [/\b(informations|advices|homeworks|furnitures|equipments|luggages|baggages)\b/i,m=>m[1].slice(0,-1),'셀 수 없는 명사라 -s를 붙이지 않아요'],
+  [/\bsince (\d+|one|two|three|four|five|six|seven|eight|nine|ten|a few|several) (years?|months?|weeks?|days?)\b/i,m=>'for '+m[1]+' '+m[2],'기간은 for, 시작 시점은 since'],
+  [/\bmore (better|worse|bigger|easier|harder|faster)\b/i,m=>m[1],'비교급 중복 (more 불필요)'],
+  [/\bmost (best|worst)\b/i,m=>'the '+m[1],'최상급 중복 (most 불필요)'],
+  [/\bpeople (is|was)\b/i,m=>'people '+(m[1].toLowerCase()==='is'?'are':'were'),'people은 복수'],
+  [/\bin (the )?weekends?\b/i,()=>'on the weekend','주말은 on the weekend'],
+  [/\bin (monday|tuesday|wednesday|thursday|friday|saturday|sunday)s?\b/i,m=>'on '+m[1],'요일 앞은 on'],
+  [/\b(at|in) last (week|month|year|weekend|night|summer|winter)\b/i,m=>'last '+m[2],'last 앞에는 전치사 없이'],
+  [/\b(can|could|should|must|will|would) to (\w+)\b/i,m=>m[1]+' '+m[2],'조동사 뒤에는 to 없이 동사원형'],
+  [/\b(want|wanted|need|needed|plan|planned|decided|hope|hoped|tried) (go|eat|see|buy|do|try|visit|travel|play|watch|run|learn|make|get|have|take|be)\b/i,m=>m[1]+' to '+m[2],'want/need/plan 뒤에는 to + 동사'],
+  [/\b(let|make|made|lets) (me|us|him|her|them) to (\w+)/i,m=>m[1]+' '+m[2]+' '+m[3],'let/make 뒤에는 to 없이 동사원형'],
+  [/\bdifferent with\b/i,()=>'different from','different from이 자연스러워요'],
+  [/\bmarr(y|ied) with\b/i,m=>'marr'+m[1],'marry 뒤에 with 불필요'],
+  [/\bcontact to\b/i,()=>'contact','contact 뒤에 to 불필요'],
+  [/\balmost (people|koreans|students|workers|employees)\b/i,m=>'most '+m[1],'almost 대신 most (대부분의 사람들)'],
+  [/\ba lots of\b/i,()=>'a lot of','a lot of (lots of 와 혼동)'],
+  [/\bevery (weekends|days|mornings|nights|years|weeks)\b/i,m=>'every '+m[1].slice(0,-1),'every 뒤는 단수'],
+  [/\b(eat|ate|have|had) (a|the) (breakfast|lunch|dinner)\b/i,m=>m[1]+' '+m[3],'식사 이름 앞에 관사 X'],
+  [/\b(childs|mans|womans|mens|peoples)\b/i,m=>({childs:'children',mans:'men',womans:'women',mens:'men',peoples:'people'})[m[1].toLowerCase()],'불규칙 복수형'],
+  [/\bmy hobby is (run|jog|swim|read|cook|travel|watch|listen|walk|play|hike)\b/i,m=>'my hobby is '+OJ_ING(m[1].toLowerCase()),'hobby is 뒤에는 -ing'],
+  [/\bi (like|love|enjoy) (run|jog|swim|read|cook|travel|watch|listen|walk|hike|play)\b/i,m=>'I '+m[1]+' '+OJ_ING(m[2].toLowerCase()),'like/enjoy 뒤에는 -ing (또는 to + 동사)'],
+  [/\b(the) (korea|japan|seoul|daegu|busan|sapporo|tokyo|china)\b/i,m=>m[2],'나라·도시 이름 앞에 the X'],
+  [/\b(i|we) (was|were) (go|eat|see|play|watch|visit)\b/i,m=>m[1]+' '+OJ_PAST[m[3].toLowerCase()],'was/were + 동사원형 X → 과거형'],
+  [/\bso so\b/i,()=>"not bad / it was okay","so-so는 원어민이 잘 안 써요"],
+ ];
+ for(const [re,fn,why] of RULES){const m=text.match(re);if(m)add(m[0],fn(m),why);if(out.length>=3)break}
+ return out.slice(0,3);
+}
+function ojTip(text,lastQ){
+ const w=(text.match(/[A-Za-z']+/g)||[]).length;
+ const past=/\b(\w+ed|was|were|went|had|did|saw|ate|took|made|came|ran|got|felt|met|bought|spent|thought|told|said|left|drove|flew|slept|found|gave|brought|knew)\b/i.test(text);
+ const expQ=/\b(last|remember|memorable|time when|did you|happened|experience|recently|first time|ever)\b/i.test(lastQ||'');
+ if(w<15)return '답이 짧아요. 이유 · 예시 · 느낌을 한 문장씩 붙여 3~4문장으로 늘려 보세요.';
+ if(expQ&&!past)return '경험 질문에는 과거형! went, was, had처럼 끝까지 시제를 유지해 보세요.';
+ if(!/\b(because|so|but|and then|after that|actually|anyway|first|finally|when|while|since)\b/i.test(text))return '연결어를 넣어 보세요: because, so, and then, after that을 쓰면 문단처럼 들립니다 (IH 핵심).';
+ if(!/\b(felt|feel|happy|excited|tired|amazing|great|fun|love|loved|enjoy|enjoyed|bored|nervous|worried|proud|relaxed|glad|sad|surprised)\b/i.test(text))return '마지막에 느낌 한 문장! "It was really ~", "I felt ~"로 마무리하면 좋아요.';
+ if(w>=60)return '아주 좋아요! 이 정도 길이(1분 이상 분량)가 IH 목표에 딱 맞습니다.';
+ return '좋아요! 다음엔 언제 · 어디서 · 누구와 같은 구체적인 정보를 하나 더 넣어 보세요.';
+}
+function ojFresh(arr){const used=new Set(ST.chat.filter(m=>m.r==='joy').map(m=>m.t));const fresh=arr.filter(q=>![...used].some(u=>u.includes(q)));return ojRand(fresh.length?fresh:arr)}
+function ojLastQ(){for(let i=ST.chat.length-1;i>=0;i--){const m=ST.chat[i];if(m.r==='joy'){const qs=m.t.match(/[^.!?]*\?/g);return qs?qs[qs.length-1].trim():m.t}}return ''}
+let ojLastCat=null;
+function offlineReply(text){
+ const t=text.trim(),low=t.toLowerCase(),w=(t.match(/[A-Za-z']+/g)||[]).length;
+ const prevJoy=ST.chat.filter(m=>m.r==='joy');const lastQ=ojLastQ();
+ const fix=ojFixes(t);
+ // 의도 감지
+ if(/\b(again|repeat|pardon|one more time|say that again|slowly)\b/i.test(low)||/^(sorry|what|huh)\??$/i.test(low))
+  return {reply:`Sure, no problem! Let me ask again, slowly. ${lastQ||'How was your day?'}`,fix:[],tip:'못 알아들었을 때: "Could you say that again, please?"라고 하면 시험에서도 1회 다시 들을 수 있어요.',slow:true};
+ if(w<=8&&/\b(i don'?t know|no idea|not sure|i can'?t|difficult|hard question|nothing)\b/i.test(low))
+  return {reply:`No worries, take your time! You can start like this: "Hmm, that's a tough question, but let me think..." Let me ask something easier. ${ojFresh(OFFLINE_Q.free)}`,fix,tip:'막힐 땐 시간 벌기 표현: "Well, let me think...", "That\'s a good question." 후에 아무 경험이나 이어가세요.'};
+ if(/\b(bye|see you|good night|i have to go|that'?s all|talk to you later)\b/i.test(low)){
+  const mine=ST.chat.filter(m=>m.r==='me');const words=mine.reduce((a,m)=>a+(m.t.match(/[A-Za-z']+/g)||[]).length,0);
+  return {end:true,reply:`Aww, okay! You did a great job today, Yunsub. You spoke ${mine.length} times and about ${words} words in this chat. Keep practicing, and see you next time! Bye!`,fix,tip:'오늘 교정받은 표현을 모범답안 · 쉐도잉 탭에서 소리 내어 3번씩 따라 해 보세요.'};
+ }
+ const OJW={food:.6,weather:.8,tired:1.3,kids:1.2};const cats=OJ_CATS.map(c=>({c,n:(t.match(new RegExp(c.re.source,'gi'))||[]).length*(OJW[c.k]||1)})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+ const cat=cats.length?cats[0].c:null;const prevCat=ojLastCat;if(cat)ojLastCat=cat;
+ const askedMe=/\?\s*$/.test(t)&&/\byou\b/i.test(low)||/\b(what|how) about you\b|\band you\??$/i.test(low);
+ if(askedMe){
+  const qc=cat||prevCat||OJ_CATS.find(c=>c.re.test(lastQ));
+  const mine=qc?qc.joy:"Me? I love karaoke, beach trips, and trying new food. Simple things make me happy!";
+  const next=qc?ojFresh(qc.ask):ojFresh(OFFLINE_Q.free);
+  return {reply:`Oh, thanks for asking! ${mine} Anyway, back to you! ${next}`,fix,tip:fix.length?'':'좋아요! 면접관에게 되묻는 것도 OPIc 마지막 문항(질문하기) 연습이 됩니다.'};
+ }
+ if(w<=4&&/^(hi|hello|hey|good (morning|afternoon|evening))\b/i.test(low)){
+  const q=joyTopic==='free'?ojFresh(OFFLINE_Q.free):ojFresh(TOPICS[joyTopic].q);
+  return {reply:`Hi Yunsub! So nice to see you. ${q}`,fix:[],tip:''};
+ }
+ if(w<=5&&/\b(thanks|thank you)\b/i.test(low))return {reply:`You're very welcome! ${ojFresh(cat?cat.ask:OJ_GENERIC.ask)}`,fix:[],tip:''};
+ // 반응
+ let react;
+ if(w>=50)react=ojRand(["Wow, that was a long and detailed answer. Great job!","Amazing, you explained that so well!","Wow, I could really picture it while you were talking!"]);
+ else react=ojRand(cat?cat.react:OJ_GENERIC.react);
+ if(cat&&Math.random()<.4&&!react.toLowerCase().includes(cat.label.replace('your ','')))react+=` I love hearing about ${cat.label}.`;
+ // 꼬리질문
+ let q;
+ if(w<12&&prevJoy.length)q=ojRand([`Can you tell me a little more? Try adding a reason, an example, and how you feel about it.`,`Ooh, tell me more! Why is that, and can you give me one example?`,`Can you explain a bit more? When, where, and with whom?`]);
+ else if(joyTopic!=='free'&&Math.random()<.5)q=ojFresh(TOPICS[joyTopic].q);
+ else if(cat)q=ojFresh(cat.ask);
+ else if(prevJoy.length%4===3)q='By the way, let me ask you something different. '+ojFresh(OFFLINE_Q.free);
+ else q=ojFresh(OJ_GENERIC.ask);
+ return {reply:`${react} ${q}`,fix,tip:ojTip(t,lastQ)};
+}
+
+const CHEERS=["Oh, that's really interesting!","Wow, I love that!","Nice, you explained that really well!","Haha, I can totally imagine that!","That's great, Yunsub!"];
+const wordsOf=t=>(String(t||'').toLowerCase().match(/[a-z']+/g)||[]);
+const CONT_TAIL=/\b(and|but|so|because|or|um+|uh+|er+|like|the|a|an|to|of|with|my|i|when|then|which|that|if|in|at|for|was|is|it's|i'm|we|you know)\s*$/i;
+// ---- 통화 상태 ----
+const CALL={on:false,state:'idle',rec:null,prefix:'',cur:'',timer:null,idle:null,clock:null,ko:false,t0:0,turns:0,words:0,spk:0,heardAt:0,fixes:[],joyText:''};
+const heard=()=>(CALL.prefix+' '+CALL.cur).replace(/\s+/g,' ').trim();
+function greet(){const h=new Date().getHours();return h<11?"Good morning, Yunsub! I'm Joy, your English buddy from Manila. How was your morning? Did you go running today?":h<17?"Hi Yunsub! It's Joy from Manila. How's your day going so far? Busy at the factory?":"Hey Yunsub, good evening! It's Joy. How was your day? Tell me one thing that happened today."}
+function setState(s,label){CALL.state=s;const c=$('#call');if(!c)return;c.dataset.s=s;
+ const L={listening:CALL.ko?'🇰🇷 한국어로 말해 보세요 · 영어로 바꿔 드릴게요':'🎧 듣는 중 · 말을 멈추면 자동 전송 (Space = 바로 보내기)',thinking:'Joy가 생각 중…',speaking:BARGE?'🔊 Joy가 말하는 중 · 그냥 말하면 끊고 들어가요 (Space = 끊기)':'🔊 Joy가 말하는 중 (Space = 끊기)',idle:''};
+ $('#cstate').textContent=label||L[s]||'';
+ const send=$('#cSend');if(send)send.disabled=s!=='listening';
+ if(s==='listening')capMe(heard());}
+function capJoy(t){const c=$('#cap');if(c){c.className='cap';c.textContent=t||''}}
+function capMe(t){const c=$('#cap');if(c){c.className='cap me';c.innerHTML=t?esc(t):'<span class="mini">말씀하세요…</span>'}}
+onTTS=cur=>{if(CALL.on&&CALL.state==='speaking'&&cur)capJoy(cur)};
+// ---- 통화용 음성인식: 하나의 연속 인식기를 상황에 맞게 재시작 ----
+function callRecStop(){const r=CALL.rec;CALL.rec=null;if(r){try{r.abort()}catch(e){}}}
+function callRecStart(){
+ if(!CALL.on)return;callRecStop();const r=new SR();CALL.rec=r;CALL.cur='';
+ r.lang=CALL.ko?'ko-KR':'en-US';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;
+ r.onresult=e=>{if(CALL.rec!==r)return;let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript+' ';CALL.cur=t.replace(/\s+/g,' ').trim();onHeard()};
+ r.onerror=e=>{if(CALL.rec!==r)return;if(e.error==='not-allowed'||e.error==='service-not-allowed'){toast('마이크 권한이 막혀 있어요. 주소창 왼쪽 아이콘에서 마이크를 허용해 주세요.');endCall(true)}};
+ r.onend=()=>{if(CALL.rec!==r)return;CALL.rec=null;if(!CALL.on)return;
+  if(CALL.state==='listening'||(CALL.state==='speaking'&&BARGE)){CALL.prefix=heard();CALL.cur='';setTimeout(()=>{if(CALL.on&&!CALL.rec&&(CALL.state==='listening'||(CALL.state==='speaking'&&BARGE)))callRecStart()},120)}};
+ try{r.start()}catch(e){}}
+function onHeard(){
+ const t=heard();
+ if(CALL.state==='listening'){
+  if(t&&!CALL.heardAt)CALL.heardAt=Date.now();
+  capMe(t);clearTimeout(CALL.timer);clearTimeout(CALL.idle);$('#cHint')&&$('#cHint').classList.remove('glow');
+  if(t)CALL.timer=setTimeout(commitTurn,SILENCE+(CONT_TAIL.test(t)?1300:0)+(CALL.ko?600:0));
+ }else if(CALL.state==='speaking'&&BARGE&&!CALL.ko){
+  // 말 끊기(barge-in): Joy 목소리가 마이크로 새어 들어온 것(에코)은 무시
+  const joyW=new Set(wordsOf(CALL.joyText));const mine=wordsOf(t).filter(w=>!joyW.has(w)&&!/^(um+|uh+|ah+|oh|hmm+)$/.test(w));
+  if(mine.length>=2){ttsCancel();CALL.heardAt=Date.now();setState('listening');onHeard()}
+ }}
+function beginListening(){
+ if(!CALL.on)return;clearTimeout(CALL.timer);CALL.prefix='';CALL.cur='';CALL.heardAt=0;setState('listening');callRecStart();
+ clearTimeout(CALL.idle);CALL.idle=setTimeout(()=>{if(CALL.on&&CALL.state==='listening'&&!heard()){$('#cHint')&&$('#cHint').classList.add('glow');$('#cstate').textContent='막히면 💡 힌트를 눌러 보세요 · 한국어로 말해도 돼요 (🇰🇷)'}},12000)}
+function commitTurn(){
+ clearTimeout(CALL.timer);clearTimeout(CALL.idle);const t=heard();if(!t||CALL.state!=='listening')return;
+ if(CALL.heardAt)CALL.spk+=(Date.now()-CALL.heardAt)/1000;CALL.heardAt=0;
+ callRecStop();CALL.prefix='';CALL.cur='';$('#hints').hidden=true;
+ if(CALL.ko){CALL.ko=false;$('#cKo')&&$('#cKo').classList.remove('on');koHelp(t)}else sendJoy(t)}
+function joySay(text,rate){
+ if(!CALL.on){if(autoSpeak)speak(text,null,rate);return}
+ CALL.joyText=text;setState('speaking');capJoy('');if(BARGE)callRecStart();else callRecStop();
+ speak(text,()=>{if(CALL.on&&CALL.state==='speaking')beginListening()},rate)}
+function startCall(){
+ if(!SR){toast('음성 인식은 PC의 Chrome 또는 Edge에서 됩니다. (파일을 크롬/엣지로 열어 주세요)');return}
+ try{document.activeElement&&document.activeElement.blur()}catch(_){}
+ Object.assign(CALL,{on:true,ko:false,t0:Date.now(),turns:0,words:0,spk:0,heardAt:0,fixes:[],prefix:'',cur:''});
+ $('#chatCard').classList.add('incall');$('#bCall').disabled=true;$('#bCall').textContent='📞 통화 중';$('#call').hidden=false;$('#composer').hidden=true;$('#hints').hidden=true;
+ const tick=()=>{const s=Math.floor((Date.now()-CALL.t0)/1000);const e=$('#ctime');if(e)e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};tick();clearInterval(CALL.clock);CALL.clock=setInterval(tick,1000);
+ const last=ST.chat[ST.chat.length-1];
+ if(last&&last.r==='joy'&&last.t)joySay(last.t);else beginListening()}
+function endCall(silent){
+ if(!CALL.on)return;CALL.on=false;clearTimeout(CALL.timer);clearTimeout(CALL.idle);clearInterval(CALL.clock);callRecStop();ttsCancel();CALL.state='idle';
+ const card=$('#chatCard');if(card){card.classList.remove('incall');$('#bCall').disabled=false;$('#bCall').textContent='📞 Joy와 통화하기';$('#call').hidden=true;$('#composer').hidden=false}
+ const sec=Math.round((Date.now()-CALL.t0)/1000);
+ if(CALL.turns>0){ST.calls=(ST.calls||[]).concat([{date:todayKey(),sec,turns:CALL.turns,words:CALL.words}]).slice(-60);ST.sessions++;save()}
+ if(!silent&&CALL.turns>0)showReport(sec)}
+function showReport(sec){
+ const wpm=CALL.spk>5?Math.round(CALL.words/(CALL.spk/60)):0,avg=CALL.turns?Math.round(CALL.words/CALL.turns):0;
+ const goal=avg<15?'한 번 말할 때 <b>3문장 이상</b>(이유 + 예시 + 느낌)으로 늘려 보세요. IH는 "문단"으로 말하는 등급이에요.':avg<35?'좋아요! 이제 <b>과거 경험</b>을 시간 순서(First → Then → In the end)로 길게 말해 보세요.':'훌륭해요! 길이는 충분해요. <b>과거 시제 유지</b>와 연결 표현(Actually, Plus, Anyway)으로 완성도를 높이세요.';
+ const fx=CALL.fixes;const el=document.createElement('div');el.className='report';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');
+ el.innerHTML=`<div class="card"><span class="tag ok">통화 리포트</span><h2 style="margin-top:8px;font-family:var(--f-disp);font-size:22px">오늘 Joy와 ${Math.floor(sec/60)}분 ${sec%60}초 대화했어요</h2>
+  <div class="grid g4" style="margin-top:12px"><div class="kpi"><b>${CALL.turns}</b><span>말한 횟수</span></div><div class="kpi"><b>${CALL.words}</b><span>말한 단어</span></div><div class="kpi"><b>${avg}</b><span>1회 평균 단어</span></div><div class="kpi"><b>${wpm||'—'}</b><span>분당 단어(WPM)</span></div></div>
+  <p class="note" style="margin-top:12px">🎯 다음 목표: ${goal}</p>
+  <h3 style="margin-top:14px">오늘 고친 표현 ${fx.length}개</h3>${fx.length?fx.map((f,i)=>`<div class="fix"><div>💡 <s>${esc(f.you)}</s> → <b>${esc(f.better)}</b>${f.why?` <span>(${esc(f.why)})</span>`:''}</div><div class="tools" style="margin-top:4px"><button type="button" data-rs="${i}">▶ 듣기</button> <button type="button" data-rr="${i}">🔁 따라 말하기</button></div></div>`).join(''):'<p class="mini">교정할 문장이 없었어요. 다음엔 더 길게, 더 다양한 시제로 말해 보세요!</p>'}
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn" type="button" id="rpClose">닫기</button><button class="btn pri" type="button" id="rpAgain">📞 다시 통화하기</button></div></div>`;
+ document.body.appendChild(el);const close=()=>{stopListen();ttsCancel();el.remove()};
+ el.addEventListener('click',e=>{if(e.target===el)close()});$('#rpClose').onclick=close;$('#rpAgain').onclick=()=>{close();startCall()};
+ el.querySelectorAll('[data-rs]').forEach(b=>b.onclick=()=>speak(fx[+b.dataset.rs].better));
+ el.querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>repeatCheck(fx[+b.dataset.rr].better,b));
+ $('#rpAgain').focus()}
+// ---- 따라 말하기 체크 (교정 문장) ----
+function repeatCheck(target,btn){
+ if(CALL.on){speak(target);return}if(recOn){stopListen();return}if(!SR){speak(target);return}
+ const tw=wordsOf(target);btn.textContent='🔊 먼저 들어 보세요…';
+ speak(target,()=>{btn.textContent='🎙️ 따라 말하세요…';let tm=null;
+  const ok=listen(t=>{clearTimeout(tm);tm=setTimeout(stopListen,1600)},fin=>{clearTimeout(tm);const said=new Set(wordsOf(fin));const hit=tw.filter(w=>said.has(w)).length;const p=tw.length?Math.round(hit/tw.length*100):0;
+   btn.textContent=`🔁 ${p}%`;toast(p>=85?`완벽해요! ${p}% 일치 👏`:p>=60?`좋아요! ${p}% 일치 · 한 번 더 해 볼까요?`:`${p}% 일치 · 들린 문장: "${fin||'(없음)'}"`)});
+  if(!ok)btn.textContent='🔁 따라 말하기';tm=setTimeout(stopListen,6000)})}
+// ---- 힌트 / 한국어 도움 ----
+function offlineHints(q){
+ const P=/\b(did|last|remember|experience|ever|memorable|recent|recently|happened|time when|first time)\b/i,R=/\b(usually|typically|often|routine|normally|how often|every)\b/i,D=/\b(describe|look like|what is it like|favorite|where do you)\b/i,C=/\b(compare|compared|change|changed|difference|years ago|in the past)\b/i;
+ if(P.test(q))return {hints:[{en:"Well, let me think... It was about a month ago. I went there with my family on the weekend.",ko:"음… 한 달쯤 전이었어요. 주말에 가족이랑 갔어요."},{en:"At first, I was a little nervous, but it turned out to be really fun.",ko:"처음엔 좀 긴장했는데, 결국 정말 재밌었어요."},{en:"Looking back, it was one of the best moments this year.",ko:"돌이켜 보면 올해 최고의 순간 중 하나였어요."}],strategy_ko:'경험 질문: 언제 → 누구와 → 무슨 일 → 느낌, 끝까지 과거형!'};
+ if(R.test(q))return {hints:[{en:"Usually, I go for a run early in the morning before work.",ko:"보통 출근 전에 아침 일찍 달리기를 해요."},{en:"On weekends, I tend to spend time with my kids at the park.",ko:"주말엔 주로 아이들이랑 공원에서 시간을 보내요."},{en:"It really helps me relieve stress.",ko:"스트레스 푸는 데 정말 도움이 돼요."}],strategy_ko:'루틴 질문: 보통(Usually) → 주말엔(On weekends) → 그래서 좋은 점, 현재형으로.'};
+ if(C.test(q))return {hints:[{en:"Compared to ten years ago, it has changed a lot.",ko:"10년 전과 비교하면 정말 많이 바뀌었어요."},{en:"Back then, people did it by hand, but these days everything is automated.",ko:"그땐 손으로 했는데 요즘은 다 자동화됐어요."},{en:"Personally, I think the change is mostly positive.",ko:"개인적으로 그 변화는 대체로 긍정적이라고 생각해요."}],strategy_ko:'비교 질문: 과거(Back then) ↔ 현재(These days) + 내 생각.'};
+ if(D.test(q))return {hints:[{en:"Let me describe it. It's not very big, but it's really cozy.",ko:"설명해 볼게요. 크진 않지만 정말 아늑해요."},{en:"What I like most about it is that it's quiet and close to my home.",ko:"제일 좋은 점은 조용하고 집에서 가깝다는 거예요."},{en:"Overall, it's a place where I can really relax.",ko:"전체적으로 정말 편히 쉴 수 있는 곳이에요."}],strategy_ko:'묘사 질문: 큰 그림 → 세부(위치·모습) → 내가 좋아하는 이유.'};
+ return {hints:[{en:"That's a good question. Let me think for a second...",ko:"좋은 질문이네요. 잠깐 생각해 볼게요…"},{en:"To be honest, I'm not sure, but I think it's because I'm so busy these days.",ko:"솔직히 잘 모르겠지만, 요즘 너무 바빠서인 것 같아요."},{en:"For example, last weekend I stayed home and played with my kids.",ko:"예를 들어 지난 주말엔 집에서 아이들이랑 놀았어요."}],strategy_ko:'막히면 시간 벌기 표현 → 아무 경험 하나를 예시로!'}}
+function chatHist(n){return ST.chat.filter(m=>!m.live&&m.t).slice(-(n||16)).map(m=>(m.r==='me'?(m.ko?'Student (in Korean): ':'Student: '):'Joy: ')+m.t).join('\n')}
+async function getHints(){
+ const box=$('#hints');box.hidden=false;box.innerHTML='<span class="mini">힌트 만드는 중…</span>';$('#cHint')&&$('#cHint').classList.remove('glow');
+ const q=ojLastQ();let h=null;
+ if(AI){try{h=await AI.json(`Student: ${ME}. He is on a live English voice call with his tutor Joy and got stuck on her last question: "${q}".
+Recent conversation:
+${chatHist(8)}
+Give 3 short things HE could say next, in first person, about HIS real life (use the profile), natural spoken English at OPIc IH level, 1-2 sentences each, using past tense if it's about an experience. Make them build on each other (opening → detail → feeling). Also one Korean strategy line.
+JSON: {"hints":[{"en":"...","ko":"한국어 뜻"}],"strategy_ko":"한 줄 전략"}`,{modelTier:'quick',max:700})}catch(e){h=null}}
+ if(!h||!h.hints||!h.hints.length)h=offlineHints(q);
+ if(box.hidden)return;
+ box.innerHTML=h.hints.slice(0,3).map((x,i)=>`<button type="button" class="hint" data-h="${i}"><b>${esc(x.en)}</b><span>${esc(x.ko||'')} · ▶ 눌러서 듣기</span></button>`).join('')+(h.strategy_ko?`<div class="mini" style="text-align:center">🎯 ${esc(h.strategy_ko)}</div>`:'');
+ box.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>speak(h.hints[+b.dataset.h].en,null,.9))}
+function toggleKo(){
+ if(!AI){toast('한국어 → 영어 도움은 AI 연결(API 키)이 있을 때 쓸 수 있어요');return}
+ if(CALL.state==='speaking')ttsCancel();CALL.ko=!CALL.ko;$('#cKo').classList.toggle('on',CALL.ko);beginListening()}
+async function koHelp(ko){
+ ST.chat.push({r:'me',t:ko,ko:true});save();joyBusy=true;drawMsgs();setState('thinking');let r=null;
+ try{r=await AI.json(`You are Joy, a friendly English tutor on a voice call with ${ME}. He didn't know how to say something, so he said it in Korean: "${ko}".
+Joy's last question was: "${ojLastQ()}".
+Give the most natural spoken English way to say what he meant (simple, IH level, 1-2 sentences, first person), one alternative, and Joy's short spoken line that teaches it, e.g. You can say, "...". Now you try!
+JSON: {"en":"...","alt":"...","joy":"..."}`,{modelTier:'quick',max:500})}catch(e){toast(aiErr(e))}
+ joyBusy=false;
+ if(!r||!r.en){const t="Hmm, I didn't quite catch that. Could you try once more?";ST.chat.push({r:'joy',t});save();drawMsgs();joySay(t);return}
+ const msg={r:'joy',t:r.joy||`You can say, "${r.en}" Now you try!`,say:r.en,alt:r.alt||''};ST.chat.push(msg);save();drawMsgs();joySay(msg.t,.92)}
+// ---- 화면 ----
+function pJoy(){
+ if(CALL.on)endCall(true);
+ if(!ST.chat.length)ST.chat=[{r:'joy',t:greet()}];
+ ST.chat=ST.chat.filter(m=>!(m.live&&!m.t));ST.chat.forEach(m=>delete m.live);
+ const calls=(ST.calls||[]).filter(c=>c.date===todayKey());const cMin=Math.round(calls.reduce((a,c)=>a+c.sec,0)/60);
+ $('#page').innerHTML=`<div class="chatwrap">
+  <section class="card chat" id="chatCard"><div class="chathead"><div class="av">J</div><div style="flex:1;min-width:0"><b>Teacher Joy</b><div class="st">● ${AI?'AI 실시간 대화'+(AI_MODE==='key'?' (스트리밍)':'')+' · 문장 교정 켜짐':'오프라인 대화 모드 · 문법 교정 켜짐'}</div></div><button class="btn sm pri" id="bCall" type="button">📞 Joy와 통화하기</button><button class="btn sm" id="bNew" type="button">새 대화</button></div>
+   <div class="msgs" id="msgs" aria-live="polite"></div>
+   <div class="call" id="call" data-s="idle" hidden>
+    <div class="orb"><div class="av">J</div></div>
+    <div class="cstate" id="cstate"></div>
+    <div class="cap" id="cap" aria-live="polite"></div>
+    <div class="hints" id="hints" hidden></div>
+    <div class="cbtns">
+     <button class="btn sm" id="cHint" type="button">💡 힌트</button>
+     <button class="btn sm" id="cKo" type="button" title="모르는 말은 한국어로 → 영어로 바꿔 줘요">🇰🇷 한국어로</button>
+     <button class="btn sm" id="cAgain" type="button">🐢 천천히 다시</button>
+     <button class="btn sm" id="cRedo" type="button">↺ 다시 말하기</button>
+     <button class="btn sm pri" id="cSend" type="button">보내기 ⏎</button>
+     <button class="btn sm stop" id="cEnd" type="button">통화 종료 <span id="ctime" class="ct">0:00</span></button>
+    </div>
+    <div class="mini kb">Space 보내기·끊기 · Esc 종료</div>
+   </div>
+   <div class="composer" id="composer"><button class="mic" id="mic" type="button" aria-label="받아쓰기">🎤</button><textarea id="say" placeholder="영어로 입력하거나 🎤로 받아쓰기 (Enter 전송) · 말로 대화하려면 📞 통화하기"></textarea><button class="btn pri" id="send" type="button">보내기</button></div></section>
+  <aside class="side">
+   <div class="card"><h3>오늘의 대화 주제</h3><div class="topicbtns">${[['free','자유 대화'],...Object.keys(TOPICS).map(k=>[k,TOPICS[k].ko])].map(([k,l])=>`<button type="button" class="btn sm ${k===joyTopic?'pri':''}" data-topic="${k}">${l}</button>`).join('')}</div></div>
+   <div class="card"><h3>통화 설정</h3>
+    <label class="chk"><input type="checkbox" id="barge" ${BARGE?'checked':''}> 🎧 이어폰 모드 (Joy 말 끊고 들어가기)</label>
+    <label class="row" style="font-size:14px;margin-top:8px">말 멈춤 감지 <select id="sil" class="inp" style="width:auto">${[1000,1500,2000,3000].map(v=>`<option value="${v}" ${v===SILENCE?'selected':''}>${v/1000}초</option>`).join('')}</select></label>
+    <label style="font-size:14px;margin-top:8px;display:block">Joy 목소리<select id="vSel" class="inp"></select></label>
+    <label class="row" style="font-size:14px;margin-top:8px">말 속도 <select id="rt" class="inp" style="width:auto">${[0.8,0.9,1,1.1].map(r=>`<option ${r===RATE?'selected':''} value="${r}">${r}x</option>`).join('')}</select></label>
+    <label class="chk" style="margin-top:10px"><input type="checkbox" id="auto" ${autoSpeak?'checked':''}> 채팅(타이핑)일 때도 소리로 읽기</label>
+    <p class="note" style="margin-top:10px">${SR?'<b>📞 통화하기</b>: 말하고 멈추면 자동 전송 → Joy가 바로 대답 → 다시 듣기. "and, so, because, um"으로 끝나면 생각 중으로 보고 조금 더 기다려요. 이어폰 모드에선 Joy가 말하는 중에 그냥 말하면 끊고 들어갈 수 있어요. 목소리는 <b>Natural</b>이 붙은 것이 가장 사람 같아요 (엣지에서 많이 보여요).':'이 화면에서는 마이크를 쓸 수 없습니다. PC의 크롬이나 엣지로 파일을 열어 주세요.'}</p></div>
+   <div class="card"><details><summary style="cursor:pointer;font-weight:700">AI 연결 (선택 · 없어도 됨)</summary><div style="margin-top:8px">
+    <p class="mini" style="margin-bottom:8px">${AI?(AI_MODE==='key'?'✅ 내 API 키로 연결됨':'✅ claude.ai로 연결됨'):'⚪ 사용 안 함 · 오프라인 Joy로 대화 중'}</p>
+    ${AI_MODE==='claude'?'':`<input id="kIn" class="inp" type="password" autocomplete="off" placeholder="sk-ant-로 시작하는 API 키" value="${esc(KEY)}">
+    <details style="margin-top:8px"><summary class="mini" style="cursor:pointer">모델 설정</summary>
+     <label class="mini">대화용(빠름)<input id="mQ" class="inp" value="${esc(MODEL_Q)}"></label>
+     <label class="mini">채점용(정밀)<input id="mD" class="inp" value="${esc(MODEL_D)}"></label></details>
+    <div class="row" style="margin-top:8px"><button class="btn sm pri" id="kSave" type="button">저장 · 연결 테스트</button>${KEY?'<button class="btn sm" id="kDel" type="button">키 삭제</button>':''}</div>
+    <p class="note" style="margin-top:8px">키는 이 브라우저에만 저장되고 HTML 파일에는 들어가지 않습니다. console.anthropic.com에서 발급 (사용량만큼 과금). AI 연결 시 실시간 스트리밍 대답 · 맞춤 힌트 · 한국어→영어 도움이 켜집니다.</p>`}</div></details></div>
+   <div class="card"><h3>오늘의 기록</h3><b style="font-family:var(--f-disp);font-size:28px">${day().talk}</b> <span class="mini">문장 · ${day().words} 단어 · 통화 ${cMin}분</span></div>
+  </aside></div>`;
+ drawMsgs();fillVoiceSel();
+ $('#send').onclick=()=>sendJoy();
+ $('#say').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendJoy()}};
+ $('#mic').onclick=()=>{if(recOn){stopListen();$('#mic').classList.remove('rec');return}if(listen(t=>{$('#say').value=t},()=>$('#mic').classList.remove('rec')))$('#mic').classList.add('rec')};
+ $('#bCall').onclick=startCall;
+ $('#cEnd').onclick=()=>endCall();$('#cSend').onclick=commitTurn;$('#cHint').onclick=getHints;$('#cKo').onclick=toggleKo;
+ $('#cRedo').onclick=()=>{if(CALL.state==='speaking')ttsCancel();beginListening()};
+ $('#cAgain').onclick=()=>{const l=[...ST.chat].reverse().find(m=>m.r==='joy'&&m.t);if(l)joySay(l.t,.8)};
+ $('#auto').onchange=e=>{autoSpeak=e.target.checked;try{localStorage.setItem('sui_auto',autoSpeak?'1':'0')}catch(_){}};
+ $('#barge').onchange=e=>{BARGE=e.target.checked;try{localStorage.setItem('sui_barge',BARGE?'1':'0')}catch(_){}};
+ $('#vSel').onchange=e=>{VOICE_NAME=e.target.value;try{localStorage.setItem('sui_voice',VOICE_NAME)}catch(_){}pickVoice();speak("Hi Yunsub! This is my new voice. How do I sound?")};
+ $('#rt').onchange=e=>{RATE=+e.target.value;try{localStorage.setItem('sui_rate',RATE)}catch(_){}speak("Okay, I'll talk like this now.")};
+ $('#bNew').onclick=()=>{ST.chat=[];save();pJoy()};
+ $('#sil').onchange=e=>{SILENCE=+e.target.value;try{localStorage.setItem('sui_sil',SILENCE)}catch(_){}};
+ const ks=$('#kSave');if(ks)ks.onclick=async()=>{const k=$('#kIn').value.trim();if(!k){toast('API 키를 입력하세요');return}
+  KEY=k;MODEL_Q=$('#mQ').value.trim()||MODEL_Q;MODEL_D=$('#mD').value.trim()||MODEL_D;
+  try{localStorage.setItem('sui_key',KEY);localStorage.setItem('sui_mq',MODEL_Q);localStorage.setItem('sui_md',MODEL_D)}catch(_){}
+  ks.disabled=true;ks.textContent='테스트 중…';const t=makeLocalAI();
+  try{await t('Reply with just: OK',{modelTier:'quick',max:10});AI=t;AI_MODE='key';toast('연결 성공! 이제 Joy와 자유롭게 대화하세요.')}catch(e){AI=null;AI_MODE='';toast(aiErr(e))}
+  pJoy()};
+ const kd=$('#kDel');if(kd)kd.onclick=()=>{KEY='';try{localStorage.removeItem('sui_key')}catch(_){}if(AI_MODE==='key'){AI=null;AI_MODE=''}toast('키를 삭제했습니다');pJoy()};
+ document.querySelectorAll('[data-topic]').forEach(b=>b.onclick=()=>{joyTopic=b.dataset.topic;const q=joyTopic==='free'?"Okay, let's just talk freely! What's on your mind today?":`Great choice! Let's practice "${TOPICS[joyTopic].ko}". ${TOPICS[joyTopic].q[0]}`;ST.chat.push({r:'joy',t:q});save();pJoy();if(autoSpeak)speak(q)});
+}
+// 키보드: 통화 중 Space = 보내기 / Joy 말 끊기, Esc = 종료
+document.addEventListener('keydown',e=>{
+ if(!CALL.on||e.isComposing)return;const tg=e.target&&e.target.tagName;if(/INPUT|TEXTAREA|SELECT/.test(tg||''))return;
+ if(e.key==='Escape'){e.preventDefault();endCall();return}
+ if(e.code==='Space'||e.key==='Enter'){e.preventDefault();if(CALL.state==='speaking'){ttsCancel();beginListening()}else if(CALL.state==='listening')commitTurn()}});
+function drawMsgs(){const box=$('#msgs');if(!box)return;const base=ST.chat.length-Math.min(40,ST.chat.length);
+ box.innerHTML=ST.chat.slice(-40).map((m,i)=>{const idx=base+i;
+  if(m.live&&!m.t)return `<div class="msg"><div class="av">J</div><div class="bub"><span class="dots" aria-label="Joy is typing"><i></i><i></i><i></i></span></div></div>`;
+  return `<div class="msg ${m.r==='me'?'me':''}">${m.r==='joy'?'<div class="av">J</div>':''}<div class="bub"><div ${m.live?'id="liveJoy"':''}>${m.ko?'<span class="kotag">🇰🇷</span> ':''}${esc(m.t)}</div>${m.say?`<div class="fix say">🗣️ 이렇게 말해 보세요: <b>${esc(m.say)}</b>${m.alt?`<br><span>또는: ${esc(m.alt)}</span>`:''}<div class="tools"><button type="button" data-sp2="${esc(m.say)}">▶ 듣기</button></div></div>`:''}${m.fix&&m.fix.length?`<div class="fix">${m.fix.map((f,j)=>`<div>💡 <s>${esc(f.you)}</s> → <b>${esc(f.better)}</b>${f.why?` <span>(${esc(f.why)})</span>`:''} <button type="button" class="rp" data-rp="${idx}:${j}" title="듣고 따라 말하기">🔁</button></div>`).join('')}</div>`:''}${m.tip?`<div class="fix" style="background:var(--brand-soft);color:var(--brand)">🎯 ${esc(m.tip)}</div>`:''}${m.live?'':`<div class="tools"><button type="button" data-say="${idx}">▶ 듣기</button></div>`}</div></div>`}).join('');
+ box.scrollTop=box.scrollHeight;
+ box.querySelectorAll('[data-say]').forEach(b=>b.onclick=()=>speak(ST.chat[+b.dataset.say].t));
+ box.querySelectorAll('[data-sp2]').forEach(b=>b.onclick=()=>speak(b.dataset.sp2,null,.9));
+ box.querySelectorAll('[data-rp]').forEach(b=>b.onclick=()=>{const [a,c]=b.dataset.rp.split(':').map(Number);const f=ST.chat[a]&&ST.chat[a].fix&&ST.chat[a].fix[c];if(f)repeatCheck(f.better,b)})}
+function updLive(t){const e=$('#liveJoy');if(e){e.textContent=t;const b=$('#msgs');b.scrollTop=b.scrollHeight}else drawMsgs()}
+function joyPrompt(){
+ const tp=joyTopic==='free'?'free conversation (follow his interests)':TOPICS[joyTopic].ko+' (OPIc topic: '+TOPICS[joyTopic].q.join(' / ')+')';
+ return `You are "Joy", a warm, playful English tutor from Manila, on a live VOICE call with your student (like the Speak or Cambly app). Student: ${ME}. His goal: OPIc IH — speaking in connected paragraphs, keeping past tense in stories.
+Practice topic: ${tp}.
+How to talk:
+- This is spoken audio. Reply in 1-3 short, natural sentences (max about 45 words). Contractions, light reactions ("Oh nice!", "Wait, really?", "Haha") — but vary them. No emojis, no lists, no markdown, no stage directions.
+- React to a SPECIFIC detail he just said. Sometimes (not always) add one tiny bit about your own life in Manila.
+- Then ask ONE open question that pushes him to talk longer: a past experience, details (when/where/who), reasons, comparisons, or feelings. Never repeat a question already asked. Don't ask yes/no questions.
+- If his answer was very short (under ~12 words), warmly ask for more detail. If he asked you something, answer briefly first.
+- His text comes from speech recognition, so guess the intended meaning of odd words instead of asking about them.
+- If he says goodbye or wants to stop, wrap up warmly in 2 sentences and set "end": true.
+Output format (strict):
+<Joy's spoken reply only>
+###
+{"fix":[{"you":"his exact words","better":"more natural version","why":"짧은 한국어 이유"}],"tip":"","end":false}
+Rules for "fix": check ONLY his latest message; ignore punctuation, capitalization and obvious speech-recognition glitches; list at most 2 IMPORTANT errors (tense, word choice, unnatural phrasing); [] if it's fine. "tip": one short Korean coaching sentence for OPIc IH only when truly useful, otherwise "".
+
+Conversation so far:
+${chatHist(16)}`}
+async function sendJoy(arg){
+ const fromBox=arg==null;const t=(fromBox?($('#say')?$('#say').value:''):arg).trim();if(!t||joyBusy)return;
+ if(fromBox){stopListen();$('#mic')&&$('#mic').classList.remove('rec');$('#say').value=''}
+ const meMsg={r:'me',t};ST.chat.push(meMsg);const d=day();d.talk++;const n=addWords(t);if(CALL.on){CALL.turns++;CALL.words+=n}save();
+ const live={r:'joy',t:'',live:true};ST.chat.push(live);joyBusy=true;drawMsgs();if(CALL.on){setState('thinking');capMe(t)}
+ const callAt=CALL.on;const voice=()=>callAt?CALL.on:autoSpeak;let started=false,pos=0,res=null;
+ const afterJoy=()=>{if(!CALL.on)return;if(res&&res.end){endCall();return}if(CALL.state==='speaking'||CALL.state==='thinking')beginListening()};
+ const startVoice=()=>{if(started)return;started=true;if(!voice())return;if(CALL.on){setState('speaking');capJoy('');if(BARGE)callRecStart()}ttsStart(afterJoy,live.slow?.85:undefined)};
+ const flush=(sp,final)=>{if(callAt&&!CALL.on)return;let end=pos;if(final)end=sp.length;else{const re=/[.!?]+["')\]]*\s+/g;let m;while((m=re.exec(sp)))if(m.index+m[0].length>pos)end=m.index+m[0].length}
+  if(end>pos){const chunk=sp.slice(pos,end);pos=end;const ss=splitSents(chunk);if(ss.length){startVoice();if(voice())ss.forEach(ttsPush)}}};
+ if(AI){
+  try{
+   const r=await aiStream(joyPrompt(),{modelTier:'quick',max:600,cache:false},full=>{
+    if(/^\s*\{/.test(full))return;const sp=full.split('###')[0].replace(/#+\s*$/,'');live.t=sp.trim();CALL.joyText=live.t;updLive(live.t);flush(sp,false)});
+   const full=r.text||'';let sp,js;
+   let raw;if(/^\s*\{/.test(full)){const j=parseJSON(full)||{};raw=j.reply||'';js=j}else{const parts=full.split('###');raw=parts[0].replace(/#+\s*$/,'');js=parseJSON(parts.slice(1).join('###'))||{}}
+   sp=raw.trim();if(sp){res={reply:sp,fix:Array.isArray(js.fix)?js.fix:[],tip:js.tip||'',end:!!js.end};live.t=sp;CALL.joyText=sp;flush(raw,true)}
+  }catch(e){toast(aiErr(e));if(e&&e.code==='not_granted')AI=null}
+ }
+ if(!res){ST.chat.pop();await sleep(350);res=offlineReply(t);ST.chat.push(live);live.slow=!!res.slow;live.t=res.reply||'Sorry, can you say that again?';CALL.joyText=live.t;pos=0;started=false;flush(live.t,true)}
+ if(res.fix&&res.fix.length){meMsg.fix=res.fix.slice(0,3);if(CALL.on)CALL.fixes.push(...meMsg.fix)}
+ live.tip=res.tip||'';delete live.live;delete live.slow;ST.chat=ST.chat.slice(-60);save();joyBusy=false;drawMsgs();
+ if(started&&voice())ttsClose();else afterJoy();
+}
+
+// ---------- 실전 모의고사 ----------
+let MK=null;
+function buildMock(sel){const pick=a=>a[Math.floor(Math.random()*a.length)];const s=sel.slice().sort(()=>Math.random()-.5);
+ const surv=s.filter(k=>TOPICS[k].s);const dolbal=Object.keys(TOPICS).filter(k=>!TOPICS[k].s);
+ const A=surv[0]||'home',B=surv[1]||'jog',C=pick(dolbal),rp=pick(ROLEPLAYS);
+ const Q=[{t:'자기소개',q:"Let's start the interview now. Tell me something about yourself."}];
+ [A,B,C].forEach(k=>TOPICS[k].q.forEach((q,i)=>Q.push({t:TOPICS[k].ko+' · '+['묘사','루틴/비교','경험'][i],q})));
+ rp.q.forEach((q,i)=>Q.push({t:'롤플레이 · '+['질문하기','문제 해결','관련 경험'][i],q}));
+ Q.push({t:'비교 · 사회 이슈',q:pick(SOCIAL)});Q.push({t:'면접관에게 질문',q:ASK_EXAMINER});
+ return Q.map(x=>({...x,a:'',sec:0,plays:0}))}
+function pMock(){
+ if(!MK||MK.stage==='setup'){const sel=MK&&MK.sel||['home','jog','park','travel','work','staycation','movie','music'];MK={stage:'setup',sel};
+  $('#page').innerHTML=`<div><span class="tag">실전 모의고사 · 15문항</span><h1 style="margin-top:8px">진짜 시험처럼, 질문은 듣고 답은 말로</h1><p class="lead" style="margin-top:8px">질문은 음성으로만 나오고(최대 2번), 텍스트는 막혔을 때만 열어 보세요. 답변 시간은 1분 30초~2분이 목표입니다.</p></div>
+  <section class="card"><h2>사전 설문 주제 (2개 이상)</h2><div class="survey">${Object.keys(TOPICS).filter(k=>TOPICS[k].s).map(k=>`<label><input type="checkbox" value="${k}" ${sel.includes(k)?'checked':''}> ${TOPICS[k].ko}</label>`).join('')}</div>
+   <p class="note" style="margin-top:12px">구성: 1번 자기소개 → 설문 주제 2개 × 3문항 → 돌발 주제 3문항 → 롤플레이 3문항 → 사회 이슈 → 면접관에게 질문하기. 난이도 5 수준 문항입니다.</p>
+   <div class="row" style="margin-top:14px"><button class="btn pri" id="mStart" type="button">15문항 시작</button><button class="btn" id="mQuick" type="button">3문항만 빠르게</button></div></section>`;
+  const go=n=>{const s=[...document.querySelectorAll('.survey input:checked')].map(i=>i.value);if(s.length<2)return toast('설문 주제를 2개 이상 고르세요');let Q=buildMock(s);if(n===3)Q=[Q[1],Q[3],Q[11]];MK={stage:'run',sel:s,Q,i:0,show:false};pMock()};
+  $('#mStart').onclick=()=>go(15);$('#mQuick').onclick=()=>go(3);return}
+ if(MK.stage==='run'){const q=MK.Q[MK.i];const n=MK.Q.length;
+  $('#page').innerHTML=`<div class="row" style="justify-content:space-between"><span class="tag">Q${MK.i+1} / ${n} · ${esc(q.t)}</span><button class="btn sm" id="mQuit" type="button">그만하기</button></div>
+  <div class="prog"><i style="width:${(MK.i)/n*100}%"></i></div>
+  <section class="card"><div class="row" style="justify-content:space-between;align-items:flex-start"><div style="flex:1 1 300px;min-width:0"><div class="qbox ${MK.show?'':'hide'}" id="qtext">${esc(q.q)}</div><div class="row" style="margin-top:12px"><button class="btn sun" id="mPlay" type="button">▶ 질문 듣기 (${2-q.plays}회 남음)</button><button class="btn sm" id="mShow" type="button">${MK.show?'텍스트 숨기기':'텍스트 보기'}</button></div></div>
+   <div style="text-align:right"><div class="timer" id="tm">0:00</div><div class="mini">목표 1:30~2:00</div></div></div></section>
+  <section class="card"><div class="row" style="justify-content:space-between"><h3>내 답변</h3><span class="mini" id="wc">0 단어</span></div>
+   <textarea class="ans" id="ans" placeholder="${SR?'🎤 녹음을 누르고 말하면 자동으로 받아써집니다. 타이핑도 됩니다.':'소리 내어 말하면서 핵심을 타이핑하세요.'}">${esc(q.a)}</textarea>
+   <div class="row" style="margin-top:10px;justify-content:space-between"><div class="row"><button class="mic" id="mMic" type="button" aria-label="녹음">🎤</button><span class="mini" id="mState">${SR?'녹음 대기':'타이핑 모드'}</span></div>
+   <div class="row"><button class="btn" id="mPrev" type="button" ${MK.i?'':'disabled'}>이전</button><button class="btn pri" id="mNext" type="button">${MK.i===n-1?'끝내고 결과 보기':'다음 문항'}</button></div></div></section>`;
+  let sec=q.sec,run=false,timer=null;const fmt=s=>Math.floor(s/60)+':'+String(s%60).padStart(2,'0');$('#tm').textContent=fmt(sec);
+  const start=()=>{if(run)return;run=true;timer=setInterval(()=>{sec++;q.sec=sec;$('#tm').textContent=fmt(sec);$('#tm').style.color=sec>120?'var(--bad)':sec>=90?'var(--ok)':''},1000)};
+  const upd=()=>{q.a=$('#ans').value;$('#wc').textContent=(q.a.match(/[A-Za-z']+/g)||[]).length+' 단어'};upd();
+  $('#ans').oninput=()=>{start();upd()};
+  $('#mPlay').onclick=()=>{if(q.plays>=2)return toast('실제 시험처럼 최대 2번까지만 들을 수 있습니다');q.plays++;$('#mPlay').textContent=`▶ 질문 듣기 (${2-q.plays}회 남음)`;speak(q.q,()=>start())};
+  $('#mShow').onclick=()=>{MK.show=!MK.show;$('#qtext').classList.toggle('hide',!MK.show);$('#mShow').textContent=MK.show?'텍스트 숨기기':'텍스트 보기'};
+  $('#mMic').onclick=()=>{if(recOn){stopListen();return}const base=$('#ans').value?$('#ans').value+' ':'';if(listen(t=>{$('#ans').value=base+t;upd()},()=>{$('#mMic').classList.remove('rec');$('#mState').textContent='녹음 대기'})){start();$('#mMic').classList.add('rec');$('#mState').textContent='듣는 중… 다시 누르면 멈춤'}};
+  const leave=d=>{clearInterval(timer);stopListen();upd();if(q.a.trim()&&!q.counted){q.counted=1;day().mockq++;addWords(q.a)}MK.i+=d;MK.show=false;if(MK.i>=n){MK.stage='done';MK.i=n-1}save();pMock()};
+  $('#mNext').onclick=()=>leave(1);$('#mPrev').onclick=()=>leave(-1);$('#mQuit').onclick=()=>{clearInterval(timer);MK.stage='done';pMock()};
+  return}
+ // 결과
+ const Q=MK.Q.filter(q=>q.a.trim()||q.sec);const tot=Q.reduce((a,q)=>a+q.sec,0),words=Q.reduce((a,q)=>a+(q.a.match(/[A-Za-z']+/g)||[]).length,0);const wpm=tot?Math.round(words/(tot/60)):0;
+ const short=Q.filter(q=>q.sec<60).length;
+ $('#page').innerHTML=`<div><span class="tag ok">결과</span><h1 style="margin-top:8px">${Q.length}문항을 마쳤어요</h1></div>
+ <div class="grid g4"><div class="card kpi"><b>${Math.floor(tot/60)}분 ${tot%60}초</b><span>총 답변 시간</span></div><div class="card kpi"><b>${words}</b><span>말한 단어</span></div><div class="card kpi"><b>${wpm}</b><span>분당 단어 (WPM)</span></div><div class="card kpi"><b>${short}</b><span>1분 미만 답변</span></div></div>
+ <section class="card" id="aiBox"><h2>AI 코치 채점</h2>${AI?`<p class="lead">답변 텍스트를 바탕으로 예상 등급과 고칠 점을 받아봅니다. (받아쓰기 기준이라 발음은 평가하지 않습니다)</p><button class="btn pri" id="aiGo" type="button" style="margin-top:10px">채점 받기</button>`:`<p class="lead">AI가 연결되지 않은 화면입니다. 아래 체크리스트로 스스로 점검하고, Joy 탭 &gt; AI 연결에 API 키를 넣으면 AI 채점을 받을 수 있습니다.</p>
+  <ul class="li" style="margin-top:10px"><li>답변마다 1분 30초를 넘겼나요? (1분 미만 ${short}개)</li><li>경험 문항에서 끝까지 과거형을 썼나요?</li><li>롤플레이 문제 해결에서 대안을 2~3개 말했나요?</li><li>침묵 대신 필러 표현을 썼나요?</li></ul>
+  <div class="row" style="margin-top:12px">${['IM2','IM3','IH','AL'].map(l=>`<button class="btn sm" data-self="${l}" type="button">자가 평가: ${l}</button>`).join('')}</div>`}<div id="aiOut" style="margin-top:12px"></div></section>
+ <section class="card"><h2>문항별 기록</h2>${Q.map((q,i)=>`<div class="res"><div class="row" style="justify-content:space-between"><b>${esc(q.t)}</b><span class="mini">${Math.floor(q.sec/60)}:${String(q.sec%60).padStart(2,'0')} · ${(q.a.match(/[A-Za-z']+/g)||[]).length} 단어 ${q.sec<60?'<span class="tag bad">짧음</span>':q.sec>=90?'<span class="tag ok">좋음</span>':''}</span></div><p class="mini" style="margin-top:4px">${esc(q.q)}</p><p style="margin-top:6px;white-space:pre-wrap">${esc(q.a)||'<span class="mini">(텍스트 없음)</span>'}</p></div>`).join('')}</section>
+ <div class="row"><button class="btn pri" id="mAgain" type="button">새 모의고사</button><button class="btn" data-tab="model" type="button">모범답안 보러 가기</button></div>`;
+ const rec_=lv=>{ST.mocks.push({date:todayKey(),n:Q.length,wpm,level:lv});ST.mocks=ST.mocks.slice(-30);ST.sessions++;save()};
+ document.querySelectorAll('[data-self]').forEach(b=>b.onclick=()=>{rec_(b.dataset.self+'(자가)');toast('기록했습니다')});
+ $('#mAgain').onclick=()=>{MK={stage:'setup',sel:MK.sel};pMock()};
+ if($('#aiGo'))$('#aiGo').onclick=async()=>{const b=$('#aiGo');b.disabled=true;$('#aiOut').innerHTML='<p class="mini">채점 중… (30초~1분 정도 걸릴 수 있어요)</p>';
+  const prompt=`You are an expert OPIc rater and coach for Korean learners. The candidate's goal is IH. Below are his answers (speech-to-text or typed, so ignore punctuation and spelling). Answer time in seconds is given.
+Rate holistically using OPIc/ACTFL criteria (paragraph-level discourse, tense control, role-play complication handling, fluency signals like length).
+Return ONLY JSON:
+{"level":"one of NH, IL, IM1, IM2, IM3, IH, AL","summary_ko":"2-3 문장 총평","strengths_ko":["..",".."],"items":[{"no":1,"issue_ko":"가장 중요한 문제 1개","better":"an improved IH-level version of 2-3 key sentences"}],"next_ko":["다음 연습 과제 3개"]}
+Only include items for the 5 answers that need the most help.
+
+${Q.map((q,i)=>`[${i+1}] (${q.t}, ${q.sec}s) Q: ${q.q}\nA: ${q.a||'(no answer)'}`).join('\n\n')}`;
+  try{const r=await AI.json(prompt,{modelTier:'default'});rec_(r.level||'');
+   $('#aiOut').innerHTML=`<div class="row"><span class="tag ${/IH|AL/.test(r.level)?'ok':'sun'}" style="font-size:16px;padding:4px 14px">예상 ${esc(r.level)}</span></div><p style="margin-top:10px">${esc(r.summary_ko)}</p>
+   <h3 style="margin-top:12px">잘한 점</h3><ul class="li">${(r.strengths_ko||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+   <h3 style="margin-top:12px">고칠 점 · 업그레이드 문장</h3>${(r.items||[]).map(it=>`<div class="res"><b>Q${esc(it.no)}</b> ${esc(it.issue_ko)}<div class="fix" style="margin-top:6px">✨ ${esc(it.better)} <button class="btn sm" type="button" data-sp="${esc(it.better)}">▶</button></div></div>`).join('')}
+   <h3 style="margin-top:12px">다음 연습</h3><ul class="li">${(r.next_ko||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+   document.querySelectorAll('[data-sp]').forEach(x=>x.onclick=()=>speak(x.dataset.sp))}
+  catch(e){$('#aiOut').innerHTML=`<p class="bad">${esc(aiErr(e))}</p>`;b.disabled=false}};
+}
+
+// ---------- 모범답안 · 쉐도잉 ----------
+let mSel=0,playing=-1;
+function pModel(){
+ const m=MODELS[mSel];const sents=m.a.match(/[^.!?]+[.!?]+["']?/g)||[m.a];
+ const mark=s=>{let h=esc(s);m.k.forEach(k=>{const key=k.split('~')[0].trim().replace(/[.,]$/,'');if(key.length>4){const re=new RegExp('('+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i');h=h.replace(re,'<mark class="k">$1</mark>')}});return h};
+ $('#page').innerHTML=`<div><span class="tag">모범답안 · 쉐도잉</span><h1 style="margin-top:8px">내 이야기로 만든 IH 모범답안 ${MODELS.length}개</h1><p class="lead" style="margin-top:8px">문장을 누르면 원어민 음성으로 듣습니다. 듣고 → 따라 말하고 → 핵심 표현(노란색)만 남기고 내 말로 바꿔 말해 보세요.</p></div>
+ <div class="mlist"><div class="mitems">${MODELS.map((x,i)=>`<button type="button" class="${i===mSel?'on':''}" data-m="${i}">${esc(x.ko)}</button>`).join('')}</div>
+ <section class="card"><span class="tag sun">QUESTION</span><p class="qbox" style="margin-top:8px;font-size:16px">${esc(m.q)}</p>
+  <div class="row" style="margin:14px 0"><button class="btn pri" id="pAll" type="button">▶ 전체 듣기</button><button class="btn" id="pStop" type="button">■ 멈춤</button><button class="btn sun" id="pDone" type="button">✓ 쉐도잉 완료</button><span class="mini">약 ${Math.round(m.a.split(' ').length/130*60)}초 분량 · ${m.a.split(' ').length} 단어</span></div>
+  <div id="sents">${sents.map((s,i)=>`<div class="sent" data-s="${i}"><span class="n">${i+1}</span><p>${mark(s.trim())}</p></div>`).join('')}</div>
+  <h3 style="margin-top:16px">핵심 표현</h3><div class="row">${m.k.map(k=>`<button type="button" class="btn sm" data-sp="${esc(k.replace(/~/g,'something'))}">${esc(k)}</button>`).join('')}</div>
+  ${SR?`<h3 style="margin-top:16px">따라 말하기 체크</h3><div class="row"><button class="mic" id="shMic" type="button" aria-label="따라 말하기">🎤</button><span class="mini" id="shOut">전체 답변을 따라 말해 보세요. 일치율을 보여줍니다.</span></div>`:''}
+ </section></div>`;
+ document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mSel=+b.dataset.m;pModel()});
+ const hi=i=>document.querySelectorAll('.sent').forEach((e,j)=>e.classList.toggle('play',j===i));
+ document.querySelectorAll('.sent').forEach(e=>e.onclick=()=>{const i=+e.dataset.s;hi(i);speak(sents[i],()=>hi(-1))});
+ const playFrom=i=>{if(i>=sents.length){hi(-1);return}hi(i);speak(sents[i],()=>{if(playing===mSel)playFrom(i+1)})};
+ $('#pAll').onclick=()=>{playing=mSel;playFrom(0)};$('#pStop').onclick=()=>{playing=-1;ttsCancel();hi(-1)};
+ $('#pDone').onclick=()=>{day().shadow++;addWords(m.a);ST.sessions++;save();toast('쉐도잉 기록 완료! 오늘의 미션에 반영됐어요')};
+ document.querySelectorAll('[data-sp]').forEach(x=>x.onclick=()=>speak(x.dataset.sp));
+ if($('#shMic'))$('#shMic').onclick=()=>{if(recOn){stopListen();return}const target=(m.a.toLowerCase().match(/[a-z']+/g)||[]);if(listen(t=>{$('#shOut').textContent=t},(fin)=>{$('#shMic').classList.remove('rec');const said=new Set((fin.toLowerCase().match(/[a-z']+/g)||[]));const hit=target.filter(w=>said.has(w)).length;$('#shOut').innerHTML=`일치율 <b>${Math.round(hit/target.length*100)}%</b> · 말한 단어 ${said.size}개`;addWords(fin)}))$('#shMic').classList.add('rec')};
+}
+
+// ---------- 표현 뱅크 ----------
+function pPhr(){
+ $('#page').innerHTML=`<div><span class="tag">표현 뱅크</span><h1 style="margin-top:8px">IH 답변을 '문단'으로 묶어주는 연결 표현</h1><p class="lead" style="margin-top:8px">누르면 원어민 음성으로 들려줍니다. 하루에 한 묶음씩 소리 내어 3번 따라 하세요.</p></div>
+ <div class="grid g2">${PHRASES.map(g=>`<section class="card"><h2>${esc(g.g)}</h2><div style="display:flex;flex-direction:column;gap:6px">${g.x.map(x=>`<button type="button" class="btn" style="justify-content:flex-start;text-align:left;font-weight:500" data-sp="${esc(x.replace(/~/g,'something'))}">▶ ${esc(x)}</button>`).join('')}</div></section>`).join('')}</div>`;
+ document.querySelectorAll('[data-sp]').forEach(x=>x.onclick=()=>speak(x.dataset.sp));
+}
+render();
+</script>
+</body></html>
