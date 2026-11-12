@@ -189,6 +189,7 @@ mark.k{background:var(--sun-soft);color:var(--sun-ink);border-radius:4px;padding
 .report .tools button{all:unset;cursor:pointer;font-size:12px;font-weight:700;color:inherit;margin-right:10px}
 @media (max-width:760px){.chat.incall{height:calc(100vh - 150px)}.cap{font-size:17px}}
 @media (prefers-reduced-motion:reduce){.orb::before,.orb::after,.dots i,.btn.glow{animation:none!important}}
+.card.thinking{box-shadow:0 0 0 2px #f5b301 inset;transition:box-shadow .3s}
 </style>
 </head><body><div class="shell">
  <nav class="rail" id="rail" aria-label="메뉴">
@@ -310,7 +311,8 @@ let tab='home';try{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))tab=
 const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 let ST={days:{},words:0,sessions:0,mocks:[],exam:'',chat:[]};
 try{Object.assign(ST,JSON.parse(localStorage.getItem('sui')||'{}'))}catch(e){}
-function save(){try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}}
+function stampChat(){const now=Date.now();let k=0;(ST.chat||[]).forEach(m=>{if(!m.at)m.at=now-((ST.chat||[]).length)+(k++)})}
+function save(){stampChat();ST.upd=Date.now();try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}syncSoon()}
 function day(){const k=todayKey();ST.days[k]=ST.days[k]||{talk:0,shadow:0,mockq:0,words:0};return ST.days[k]}
 function addWords(t){const n=(t.trim().match(/[A-Za-z']+/g)||[]).length;ST.words+=n;day().words+=n;save();return n}
 function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2200)}
@@ -345,7 +347,7 @@ function ttsPump(){
  guard=setTimeout(next,s.length*110/u.rate+6000);
  try{speechSynthesis.resume()}catch(_){}speechSynthesis.speak(u)}
 function speak(text,onend,rate){if(!('speechSynthesis' in window)){toast('이 환경은 음성 재생을 지원하지 않습니다');onend&&onend();return}ttsStart(onend,rate);splitSents(text).forEach(ttsPush);ttsClose()}
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let rec=null,recOn=false;
 function listen(onText,onStop){
  if(!SR){toast('여기서는 음성 인식을 쓸 수 없어 타이핑으로 연습합니다. PC 크롬/엣지에서 HTML 파일로 열면 마이크가 켜집니다.');return false}
@@ -359,13 +361,14 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // ================= AI (Claude) =================
 let AI=null,AIready=false;
 // ---- 노트북(로컬 HTML) 모드: Anthropic API 키로 직접 호출 ----
-let KEY='',MODEL_Q='claude-haiku-4-5',MODEL_D='claude-sonnet-4-5',AI_MODE='';
-try{KEY=localStorage.getItem('sui_key')||'';MODEL_Q=localStorage.getItem('sui_mq')||MODEL_Q;MODEL_D=localStorage.getItem('sui_md')||MODEL_D}catch(e){}
+let KEY='',MODEL_Q='claude-haiku-5-5',MODEL_D='claude-sonnet-5-5',AI_MODE='';const MFB={'claude-haiku-5-5':'claude-haiku-4-5','claude-sonnet-5-5':'claude-sonnet-4-5'};
+try{KEY=localStorage.getItem('sui_key')||'';MODEL_Q=localStorage.getItem('sui_mq')||MODEL_Q;MODEL_D=localStorage.getItem('sui_md')||MODEL_D;if(localStorage.getItem('sui_mfb')!=='1'){if(MODEL_Q==='claude-haiku-4-5')MODEL_Q='claude-haiku-5-5';if(MODEL_D==='claude-sonnet-4-5')MODEL_D='claude-sonnet-5-5'}}catch(e){}
 function makeLocalAI(){
  const URL_='https://api.anthropic.com/v1/messages';
  async function post(body){let res;
   try{res=await fetch(URL_,{method:'POST',headers:{'content-type':'application/json','x-api-key':KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)})}
   catch(e){const er=new Error('network');er.code='network';throw er}
+  if(!res.ok&&res.status===404&&MFB[body.model]){const o=body.model,nw=MFB[o];if(MODEL_Q===o)MODEL_Q=nw;if(MODEL_D===o)MODEL_D=nw;try{localStorage.setItem('sui_mq',MODEL_Q);localStorage.setItem('sui_md',MODEL_D);localStorage.setItem('sui_mfb','1')}catch(_){}return post({...body,model:nw})}
   if(!res.ok){let msg='';try{msg=((await res.json()).error||{}).message||''}catch(_){}const er=new Error(msg||('HTTP '+res.status));er.code=res.status===401?'bad_key':res.status===429?'rate_limited':res.status===404?'bad_model':'http';er.detail=msg;throw er}
   return res}
  async function call(prompt,opts={}){
@@ -387,14 +390,14 @@ function makeLocalAI(){
     else if(j.type==='error'){const er=new Error((j.error&&j.error.message)||'stream error');er.code='http';er.detail=er.message;throw er}}}
   return {text:full}};
  return f}
-async function aiStream(prompt,opts,onText){if(AI&&AI.stream)return AI.stream(prompt,opts,onText);const r=await AI(prompt,opts);onText&&onText(r.text||'');return r}
-(async()=>{try{if(window.claude&&claude.use){AI=await claude.use('sample');AI_MODE='claude'}}catch(e){AI=null}if(!AI&&KEY){AI=makeLocalAI();AI_MODE='key'}AIready=true;if(tab==='home'||tab==='joy'||tab==='mock')setTimeout(render,0)})();
+async function aiStream(prompt,opts,onText){if(AI&&AI.stream)return AI.stream(prompt,opts,onText);if(AI_MODE==='claude'){const o=Object.assign({},opts||{});delete o.max;o.cache=false;o.onText=u=>{onText&&onText(u.text)};return AI(prompt,o)}const r=await AI(prompt,opts);onText&&onText(r.text||'');return r}
+(async()=>{try{if(window.claude&&claude.use){const [s,d]=await Promise.all([claude.use('sample'),claude.use('dictation').catch(()=>null)]);if(s){AI=s;AI_MODE='claude'}if(d)dictInit(d);dbInit()}}catch(e){AI=null}if(!AI&&KEY){AI=makeLocalAI();AI_MODE='key'}AIready=true;if(tab==='home'||tab==='joy'||tab==='mock')setTimeout(render,0)})();
 const ME="Yunsub, a Korean production manager in his late 30s at an auto-parts maker in Daegu, father of two young kids, loves running (half marathon in 2 hours), went on a winter family trip to Sapporo, builds AI automation dashboards at work";
 function parseJSON(t){try{return JSON.parse(t)}catch(e){}const m=t.match(/\{[\s\S]*\}/);if(m){try{return JSON.parse(m[0])}catch(e){}}return null}
 function aiErr(e){if(e&&e.code==='bad_key')return 'API 키가 올바르지 않습니다. Joy 탭 > AI 연결에서 다시 입력하세요.';if(e&&e.code==='bad_model')return '모델 이름을 찾을 수 없습니다: '+(e.detail||'');if(e&&e.code==='network')return '인터넷 연결(또는 회사 방화벽)로 AI 서버에 닿지 못했습니다. 기본 모드로 이어갑니다.';if(e&&e.code==='http')return 'AI 오류: '+(e.detail||e.message);return e&&e.code==='not_granted'?'AI 사용이 허용되지 않아 기본 모드로 진행합니다.':e&&e.code==='rate_limited'?'잠시 후 다시 시도해 주세요 (요청이 많습니다).':'AI 응답을 받지 못했습니다. 기본 모드로 이어갑니다.'}
 
 // ================= 렌더링 =================
-function nav(){$('#rail').innerHTML=`<div class="logo"><i>IH</i><div>Speak Up IH<small>OPIc 스피킹 코치</small></div></div>`+TABS.map(t=>`<button type="button" class="tab ${t[0]===tab?'on':''}" data-tab="${t[0]}"><span class="ic">${t[1]}</span><span>${t[2]}</span></button>`).join('')+`<div class="foot">목표 등급 <b>IH</b><br>기록은 이 브라우저에 저장됩니다.</div>`}
+function nav(){$('#rail').innerHTML=`<div class="logo"><i>IH</i><div>Speak Up IH<small>OPIc 스피킹 코치</small></div></div>`+TABS.map(t=>`<button type="button" class="tab ${t[0]===tab?'on':''}" data-tab="${t[0]}"><span class="ic">${t[1]}</span><span>${t[2]}</span></button>`).join('')+`<div class="foot">목표 등급 <b>IH</b><br>${GHS.tok?'기록은 GitHub에 동기화됩니다.':'기록은 이 브라우저에 저장됩니다.'}</div>`}
 function render(){if(CALL.on)endCall(true);stopListen();ttsCancel();document.querySelectorAll('.report').forEach(x=>x.remove());nav();({home:pHome,guide:pGuide,joy:pJoy,mock:pMock,model:pModel,phr:pPhr})[tab]();window.scrollTo(0,0)}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b){tab=b.dataset.tab;try{history.replaceState(null,'','#'+tab)}catch(_){}render()}});
 
@@ -503,14 +506,19 @@ function pGuide(){
 // ---------- Joy 프리토킹 (v2 · 스픽 스타일 실시간 통화) ----------
 let joyTopic='free',joyBusy=false,autoSpeak=true,BARGE=true;
 // ===== 튜터 기억 (지난 대화의 내 이야기 · 자주 틀리는 문법) =====
-ST.mem=ST.mem||{facts:[],weak:{}};ST.misDone=ST.misDone||{};if(ST.mis===undefined)ST.mis=null;
+ST.mem=ST.mem||{facts:[],weak:{}};ST.mem.sess=ST.mem.sess||[];ST.misDone=ST.misDone||{};if(ST.mis===undefined)ST.mis=null;
 function memFact(f){f=String(f||'').trim().replace(/[.!?]+$/,'');if(f.length<8||f.length>140)return;const k=f.toLowerCase();if(ST.mem.facts.some(x=>x.toLowerCase()===k))return;ST.mem.facts.push(f);ST.mem.facts=ST.mem.facts.slice(-30)}
 function memWeak(fx){(fx||[]).forEach(f=>{const w=String(f.why||'기타').slice(0,40);ST.mem.weak[w]=(ST.mem.weak[w]||0)+1})}
 function topWeak(n){return Object.entries(ST.mem.weak).sort((a,b)=>b[1]-a[1]).slice(0,n||3)}
 function learnerLen(){const me=ST.chat.filter(m=>m.r==='me'&&!m.drill&&!m.ko).slice(-6);return me.length?Math.round(me.reduce((a,m)=>a+wordsOf(m.t).length,0)/me.length):0}
-let FIXMODE='retry';try{FIXMODE=localStorage.getItem('sui_fix')||'retry'}catch(e){}
+let FIXMODE='note';try{if(localStorage.getItem('sui_fixv2')!=='1'){localStorage.setItem('sui_fix','note');localStorage.setItem('sui_fixv2','1')}FIXMODE=localStorage.getItem('sui_fix')||'note'}catch(e){}
 let RETRY=null; // 스픽식: 교정 문장을 바로 따라 말하게 하는 상태
 try{autoSpeak=localStorage.getItem('sui_auto')!=='0';BARGE=localStorage.getItem('sui_barge')!=='0'}catch(e){}
+const PACK_CAT={kids:'kids',run:'running',work:'work',travel:'travel',food:'food',movie:'movies',home:'home',park:'kids',tech:'tech',tired:'health',weekend:'weekend'};
+function packNext(text,cat){const P=ST.pack;if(!P||!(P.chains||[]).length)return null;ST.packPos=ST.packPos||{};
+ const asked=new Set(ST.chat.filter(m=>m.r==='joy').slice(-30).map(m=>m.t));
+ let ch=cat&&P.chains.find(c=>c.topic===PACK_CAT[cat.k])||P.chains.find(c=>c.topic===ST.packCur)||P.chains.find(c=>(ST.packPos[c.topic]||0)<c.ladder.length);if(!ch)return null;
+ for(let k=0;k<P.chains.length+1;k++){const i=ST.packPos[ch.topic]||0;if(i<ch.ladder.length){ST.packPos[ch.topic]=i+1;ST.packCur=ch.topic;const q=ch.ladder[i];if(![...asked].some(a=>a.includes(q)))return (ST.packCur!==ch.topic||i===0?ojPick(['By the way, ','Oh, I have a question. ','Okay, here\'s one for you. ']):'')+q}ch=P.chains.find(c=>(ST.packPos[c.topic]||0)<c.ladder.length);if(!ch)return null}return null}
 const OFFLINE_Q={free:["How was your day today? Tell me what you did from the morning.","What did you do last weekend with your family?","What's something you're looking forward to this month?","Tell me about your job. What was the most interesting thing at work this week?"]};
 Object.keys(TOPICS).forEach(k=>OFFLINE_Q[k]=TOPICS[k].q.slice());
 // ================= 오프라인 Joy 엔진 (API 없이 규칙 기반 자유대화) =================
@@ -718,6 +726,7 @@ function offlineReply(text){
  // 꼬리질문
  let q;
  if(w<12&&prevJoy.length)q=ojRand([`Can you tell me a little more? Try adding a reason, an example, and how you feel about it.`,`Ooh, tell me more! Why is that, and can you give me one example?`,`Can you explain a bit more? When, where, and with whom?`]);
+ else if(ST.pack&&joyTopic==='free'&&Math.random()<.7&&(q=packNext(t,cat)));
  else if(joyTopic!=='free'&&Math.random()<.5)q=ojFresh(TOPICS[joyTopic].q);
  else if(cat)q=ojFresh(cat.ask);
  else if(prevJoy.length%4===3)q='By the way, let me ask you something different. '+ojFresh(OFFLINE_Q.free);
@@ -733,8 +742,12 @@ const CALL={on:false,state:'idle',rec:null,prefix:'',cur:'',timer:null,idle:null
 const heard=()=>(CALL.prefix+' '+CALL.cur).replace(/\s+/g,' ').trim();
 function greet(){
  const M=ST.mis&&MISSIONS.find(x=>x.id===ST.mis.id);if(M)return M.open;
+ const C=ST.coach;if(C&&C.opener&&ST.openerUsed!==C.updated){ST.openerUsed=C.updated;const h=new Date().getHours();return `${h<11?'Good morning':h<17?'Hi':'Good evening'}, Yunsub! It's Joy. ${C.opener}`}
+ const SS=ST.mem.sess||[],L=SS[SS.length-1];
+ if(L&&L.next&&!L.used&&Date.now()-(L.at||0)<21*864e5){L.used=1;const h=new Date().getHours();return `${h<11?'Good morning':h<17?'Hi':'Good evening'}, Yunsub! It's Joy. ${L.next}`}
  const f=ST.mem.facts;if(f.length&&Math.random()<.75){const x=f[f.length-1-Math.floor(Math.random()*Math.min(3,f.length))];const h=new Date().getHours();
   return `${h<11?'Good morning':h<17?'Hi':'Good evening'}, Yunsub! It's Joy. ${ojPick(["Oh, I've been wondering about something.","I remember what you told me last time!","Hey, I have a question for you first."])} You told me ${x}. How did that go? Tell me everything!`}
+ if(ST.pack&&(ST.pack.chains||[]).length){const q=packNext('',null);if(q){const h=new Date().getHours();return `${h<11?'Good morning':h<17?'Hi':'Good evening'}, Yunsub! It's Joy. ${q.replace(/^(By the way, |Oh, I have a question\. |Okay, here's one for you\. )/,'')}`}}
  return greet0()}
 function greet0(){const h=new Date().getHours();return h<11?"Good morning, Yunsub! I'm Joy, your English buddy from Manila. How was your morning? Did you go running today?":h<17?"Hi Yunsub! It's Joy from Manila. How's your day going so far? Busy at the factory?":"Hey Yunsub, good evening! It's Joy. How was your day? Tell me one thing that happened today."}
 function setState(s,label){CALL.state=s;const c=$('#call');if(!c)return;c.dataset.s=s;
@@ -773,24 +786,27 @@ function commitTurn(){
  clearTimeout(CALL.timer);clearTimeout(CALL.idle);const t=heard();if(!t||CALL.state!=='listening')return;
  if(CALL.heardAt)CALL.spk+=(Date.now()-CALL.heardAt)/1000;CALL.heardAt=0;
  callRecStop();CALL.prefix='';CALL.cur='';$('#hints').hidden=true;
- if(CALL.ko){CALL.ko=false;$('#cKo')&&$('#cKo').classList.remove('on');koHelp(t)}else sendJoy(t)}
+ if(CALL.ko){CALL.ko=false;$('#cKo')&&$('#cKo').classList.remove('on');if(DICT.ns&&DICT.lang!=='en')dictNeedTap('en');koHelp(t)}else sendJoy(t)}
 function joySay(text,rate){
  if(!CALL.on){if(autoSpeak)speak(text,null,rate);return}
  CALL.joyText=text;setState('speaking');capJoy('');if(BARGE)callRecStart();else callRecStop();
  speak(text,()=>{if(CALL.on&&CALL.state==='speaking')beginListening()},rate)}
 function startCall(){
  if(!SR){toast('음성 인식은 PC의 Chrome 또는 Edge에서 됩니다. (파일을 크롬/엣지로 열어 주세요)');return}
+ if(DICT.ns&&!DICT.ns.active()){DICT.lang='en';DICT.ns.start({language:'en'}).catch(dictErr)}
  try{document.activeElement&&document.activeElement.blur()}catch(_){}
  Object.assign(CALL,{on:true,ko:false,t0:Date.now(),turns:0,words:0,spk:0,heardAt:0,fixes:[],prefix:'',cur:''});
  $('#chatCard').classList.add('incall');$('#bCall').disabled=true;$('#bCall').textContent='📞 통화 중';$('#call').hidden=false;$('#composer').hidden=true;$('#hints').hidden=true;
  const tick=()=>{const s=Math.floor((Date.now()-CALL.t0)/1000);const e=$('#ctime');if(e)e.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};tick();clearInterval(CALL.clock);CALL.clock=setInterval(tick,1000);
- const last=ST.chat[ST.chat.length-1];
- if(last&&last.r==='joy'&&last.t)joySay(last.t);else beginListening()}
+ CALL.i0=ST.chat.length;const last=ST.chat[ST.chat.length-1];
+ const stale=!last||!last.at||Date.now()-last.at>20*60e3;
+ if(stale&&!ST.mis){const g={r:'joy',t:greet()};ST.chat.push(g);ST.chat=ST.chat.slice(-60);CALL.i0=ST.chat.length-1;save();drawMsgs();joySay(g.t)}
+ else if(last&&last.r==='joy'&&last.t)joySay(last.t);else beginListening()}
 function endCall(silent){
- if(!CALL.on)return;CALL.on=false;clearTimeout(CALL.timer);clearTimeout(CALL.idle);clearInterval(CALL.clock);callRecStop();ttsCancel();CALL.state='idle';
+ if(!CALL.on)return;CALL.on=false;if(DICT.ns&&DICT.ns.active())DICT.ns.stop().catch(()=>{});DICT.tap=false;clearTimeout(CALL.timer);clearTimeout(CALL.idle);clearInterval(CALL.clock);callRecStop();ttsCancel();CALL.state='idle';
  const card=$('#chatCard');if(card){card.classList.remove('incall');$('#bCall').disabled=false;$('#bCall').textContent='📞 Joy와 통화하기';$('#call').hidden=true;$('#composer').hidden=false}
  const sec=Math.round((Date.now()-CALL.t0)/1000);
- if(CALL.turns>0){ST.calls=(ST.calls||[]).concat([{date:todayKey(),sec,turns:CALL.turns,words:CALL.words}]).slice(-60);ST.sessions++;save()}
+ if(CALL.turns>0){ST.calls=(ST.calls||[]).concat([{date:todayKey(),sec,turns:CALL.turns,words:CALL.words}]).slice(-60);ST.sessions++;save();if(CALL.turns>=2)summarizeCall(CALL.i0||0);else if(GHS.tok)setTimeout(()=>syncNow(true),3000)}
  if(!silent&&CALL.turns>0)showReport(sec)}
 function showReport(sec){
  const wpm=CALL.spk>5?Math.round(CALL.words/(CALL.spk/60)):0,avg=CALL.turns?Math.round(CALL.words/CALL.turns):0;
@@ -837,7 +853,7 @@ JSON: {"hints":[{"en":"...","ko":"한국어 뜻"}],"strategy_ko":"한 줄 전략
  box.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>speak(h.hints[+b.dataset.h].en,null,.9))}
 function toggleKo(){
  if(!AI){toast('한국어 → 영어 도움은 AI 연결(API 키)이 있을 때 쓸 수 있어요');return}
- if(CALL.state==='speaking')ttsCancel();CALL.ko=!CALL.ko;$('#cKo').classList.toggle('on',CALL.ko);beginListening()}
+ if(CALL.state==='speaking')ttsCancel();CALL.ko=!CALL.ko;$('#cKo').classList.toggle('on',CALL.ko);if(DICT.ns)dictLang(CALL.ko?'ko':'en');beginListening()}
 async function koHelp(ko){
  ST.chat.push({r:'me',t:ko,ko:true});save();joyBusy=true;drawMsgs();setState('thinking');let r=null;
  try{r=await AI.json(`You are Joy, a friendly English tutor on a voice call with ${ME}. He didn't know how to say something, so he said it in Korean: "${ko}".
@@ -874,6 +890,9 @@ function pJoy(){
    </div>
    <div class="composer" id="composer"><button class="mic" id="mic" type="button" aria-label="받아쓰기">🎤</button><textarea id="say" placeholder="영어로 입력하거나 🎤로 받아쓰기 (Enter 전송) · 말로 대화하려면 📞 통화하기"></textarea><button class="btn pri" id="send" type="button">보내기</button></div></section>
   <aside class="side">
+   <div class="card" id="brainBox">${brainInner()}</div>
+   <div id="coachBox">${coachCard()}</div>
+   ${packCard()}
    <div class="card"><h3>오늘의 대화 주제</h3><div class="topicbtns">${[['free','자유 대화'],...Object.keys(TOPICS).map(k=>[k,TOPICS[k].ko])].map(([k,l])=>`<button type="button" class="btn sm ${k===joyTopic?'pri':''}" data-topic="${k}">${l}</button>`).join('')}</div></div>
    <div class="card"><h3>🎭 상황극 미션 <span class="mini">· 스픽식 실전 롤플레이</span></h3><div class="mis">${MISSIONS.map(m=>`<button type="button" class="btn ${ST.mis&&ST.mis.id===m.id?'pri':''} ${ST.misDone[m.id]?'done':''}" data-mis="${m.id}">${m.ko}</button>`).join('')}</div>${ST.mis?'<button class="btn sm" id="misEnd" type="button" style="margin-top:8px">미션 끝내고 자유 대화</button>':''}<p class="mini" style="margin-top:6px">Joy가 상대역을 맡아요. 대화 속에서 목표 3개를 달성하면 완료!</p></div>
    <div class="card"><h3>통화 설정</h3>
@@ -892,7 +911,13 @@ function pJoy(){
      <label class="mini">채점용(정밀)<input id="mD" class="inp" value="${esc(MODEL_D)}"></label></details>
     <div class="row" style="margin-top:8px"><button class="btn sm pri" id="kSave" type="button">저장 · 연결 테스트</button>${KEY?'<button class="btn sm" id="kDel" type="button">키 삭제</button>':''}</div>
     <p class="note" style="margin-top:8px">키는 이 브라우저에만 저장되고 HTML 파일에는 들어가지 않습니다. console.anthropic.com에서 발급 (사용량만큼 과금). AI 연결 시 실시간 스트리밍 대답 · 맞춤 힌트 · 한국어→영어 도움이 켜집니다.</p>`}</div></details></div>
-   <div class="card"><details><summary style="cursor:pointer;font-weight:700">🧠 Joy가 기억하는 나 (${ST.mem.facts.length})</summary>${ST.mem.facts.length?`<ul class="memli">${ST.mem.facts.slice(-6).reverse().map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:'<p class="mini" style="margin-top:6px">대화에서 알게 된 내 이야기를 기억해 두었다가 다음 대화에서 먼저 물어봐요.</p>'}${topWeak(3).length?`<p class="mini" style="margin-top:8px"><b>자주 틀리는 것</b>: ${topWeak(3).map(x=>esc(x[0])+' ×'+x[1]).join(' · ')}</p>`:''}<button class="btn sm" id="memClr" type="button" style="margin-top:8px">기억 지우기</button></details></div>
+   <div class="card"><details ${GHS.tok?'':'open'}><summary style="cursor:pointer;font-weight:700">☁️ 기억 동기화 · Claude 코치 연동 ${GHS.tok?(GHS.err?'⚠️':'✅'):''}</summary><div style="margin-top:8px">
+    <p class="mini" id="ghStat" style="margin-bottom:8px">${ghStatus()}</p>
+    <input id="ghTok" class="inp" type="password" autocomplete="off" placeholder="github_pat_ 로 시작하는 토큰" value="${esc(GHS.tok)}">
+    <input id="ghRepo" class="inp" style="margin-top:6px" value="${esc(GHS.repo)}" aria-label="저장소">
+    <div class="row" style="margin-top:8px"><button class="btn sm pri" id="ghSave" type="button">저장 · 지금 동기화</button>${GHS.tok?'<button class="btn sm" id="ghNow" type="button">⟳ 동기화</button><button class="btn sm" id="ghDel" type="button">연결 해제</button>':''}</div>
+    <p class="note" style="margin-top:8px">대화 기록·Joy의 기억·통화 요약을 <b>비공개</b> GitHub 저장소에 자동 저장합니다. PC·폰 어디서 열어도 이어서 대화하고, Claude가 남긴 <b>코치 노트</b>를 받아 Joy가 그대로 지도해요. 토큰은 이 브라우저에만 저장됩니다.</p></div></details></div>
+   <div class="card"><details><summary style="cursor:pointer;font-weight:700">🧠 Joy가 기억하는 나 (${ST.mem.facts.length})</summary>${sessHTML()}${ST.mem.facts.length?`<ul class="memli">${ST.mem.facts.slice(-6).reverse().map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:'<p class="mini" style="margin-top:6px">대화에서 알게 된 내 이야기를 기억해 두었다가 다음 대화에서 먼저 물어봐요.</p>'}${topWeak(3).length?`<p class="mini" style="margin-top:8px"><b>자주 틀리는 것</b>: ${topWeak(3).map(x=>esc(x[0])+' ×'+x[1]).join(' · ')}</p>`:''}<button class="btn sm" id="memClr" type="button" style="margin-top:8px">기억 지우기</button></details></div>
    <div class="card"><h3>오늘의 기록</h3><b style="font-family:var(--f-disp);font-size:28px">${day().talk}</b> <span class="mini">문장 · ${day().words} 단어 · 통화 ${cMin}분</span></div>
   </aside></div>`;
  drawMsgs();fillVoiceSel();
@@ -907,9 +932,9 @@ function pJoy(){
  $('#barge').onchange=e=>{BARGE=e.target.checked;try{localStorage.setItem('sui_barge',BARGE?'1':'0')}catch(_){}};
  $('#vSel').onchange=e=>{VOICE_NAME=e.target.value;try{localStorage.setItem('sui_voice',VOICE_NAME)}catch(_){}pickVoice();speak("Hi Yunsub! This is my new voice. How do I sound?")};
  $('#rt').onchange=e=>{RATE=+e.target.value;try{localStorage.setItem('sui_rate',RATE)}catch(_){}speak("Okay, I'll talk like this now.")};
- $('#bNew').onclick=()=>{ST.chat=[];ST.mis=null;RETRY=null;save();pJoy()};
+ $('#bNew').onclick=()=>{ST.chat=[];ST.chatClr=Date.now();ST.mis=null;RETRY=null;save();pJoy()};
  $('#fixm').onchange=e=>{FIXMODE=e.target.value;RETRY=null;try{localStorage.setItem('sui_fix',FIXMODE)}catch(_){}};
- $('#memClr').onclick=()=>{if(!confirm('Joy가 기억하는 내 이야기와 실수 기록을 지울까요?'))return;ST.mem={facts:[],weak:{}};save();pJoy()};
+ bindGH();bindBrain();document.querySelectorAll('[data-pka]').forEach(b=>b.onclick=()=>speak(ST.pack.answers[+b.dataset.pka].a));document.querySelectorAll('[data-pkr]').forEach(b=>b.onclick=()=>repeatCheck(ST.pack.answers[+b.dataset.pkr].a,b));$('#memClr').onclick=()=>{if(!confirm('Joy가 기억하는 내 이야기와 실수 기록을 지울까요?'))return;ST.mem={facts:[],weak:{},sess:[]};ST.memClr=Date.now();save();pJoy()};
  document.querySelectorAll('[data-mis]').forEach(b=>b.onclick=()=>{const M=MISSIONS.find(x=>x.id===b.dataset.mis);RETRY=null;ST.mis={id:M.id,step:0,done:[]};
   ST.chat.push({r:'joy',t:`🎭 상황극 시작: ${M.ko} · 목표 ${M.goals.map(g=>g.ko).join(' / ')}`,coach:true,sys:true});ST.chat.push({r:'joy',t:M.open});save();pJoy();if(autoSpeak)speak(M.open)});
  const me_=$('#misEnd');if(me_)me_.onclick=()=>{ST.mis=null;RETRY=null;const q="Okay, role-play's over! That was fun. So, tell me, how was the rest of your day?";ST.chat.push({r:'joy',t:q});save();pJoy();if(autoSpeak)speak(q)};
@@ -958,7 +983,7 @@ function joyPrompt(){
 ${mode}
 Learner level: ${lvl}
 What you remember about him from earlier chats: ${mem.length?mem.join('; '):'(nothing yet)'}.
-His frequent mistakes: ${weak.length?weak.join(', '):'(none recorded yet)'}. If he repeats one of these, put it first in "fix".
+${joyMemExtra()}${brainExtra()}His frequent mistakes: ${weak.length?weak.join(', '):'(none recorded yet)'}. If he repeats one of these, put it first in "fix".
 How to talk:
 - Spoken audio: 1-3 short natural sentences (max about 45 words). Contractions, genuine reactions. No emojis, lists, markdown or stage directions.
 - Sound like a real person. Do NOT start with any of these recently used openers: ${recent.map(x=>'"'+x+'"').join(', ')||'(none)'}. Avoid generic praise like "That's great" or "That's interesting".
@@ -1027,7 +1052,7 @@ async function sendJoy(arg){
  if(!res){ST.chat.pop();await sleep(350);res=offlineReply(t);if(misJust)res.reply+=" Okay, and cut! Mission complete. You handled that really naturally, Yunsub!";ST.chat.push(live);live.slow=!!res.slow;live.t=res.reply||'Sorry, can you say that again?';CALL.joyText=live.t;pos=0;started=false;flush(live.t,true)}
  if(res.fix&&res.fix.length){meMsg.fix=res.fix.slice(0,3);if(CALL.on)CALL.fixes.push(...meMsg.fix);memWeak(meMsg.fix)}
  (res.mem||[]).forEach(memFact);if(ST.mis&&res.done&&res.done.length)misCheck(t,res.done);
- live.tip=res.tip||'';delete live.live;delete live.slow;ST.chat=ST.chat.slice(-60);save();joyBusy=false;drawMsgs();
+ live.tip=res.tip||'';delete live.live;delete live.slow;ST.chat=ST.chat.slice(-60);save();joyBusy=false;drawMsgs();brainTick();
  // 스픽식: 중요한 실수 1개는 바로 따라 말하게 함 (상황극 중에는 흐름 유지)
  if(FIXMODE==='retry'&&meMsg.fix&&meMsg.fix.length&&!res.end&&!ST.mis&&(!callAt||CALL.on)){
   const f=meMsg.fix[0],tg=fixedSent(t,f),qs=live.t.match(/[^.!?]*\?/g);RETRY={target:tg,q:qs?qs[qs.length-1].trim():'',n:0};
@@ -1132,6 +1157,155 @@ function pPhr(){
  <div class="grid g2">${PHRASES.map(g=>`<section class="card"><h2>${esc(g.g)}</h2><div style="display:flex;flex-direction:column;gap:6px">${g.x.map(x=>`<button type="button" class="btn" style="justify-content:flex-start;text-align:left;font-weight:500" data-sp="${esc(x.replace(/~/g,'something'))}">▶ ${esc(x)}</button>`).join('')}</div></section>`).join('')}</div>`;
  document.querySelectorAll('[data-sp]').forEach(x=>x.onclick=()=>speak(x.dataset.sp));
 }
+
+const CLAUDE_URL='';
+
+// ================= 🎙️ claude.ai 받아쓰기 (통화 내내 한 세션 유지 · 기존 음성인식과 같은 방식으로 연결) =================
+var DICT={ns:null,cur:null,lang:'en',tap:false};
+function dictErr(e){const c=e&&e.code;if(c==='no_gesture'){dictNeedTap(DICT.lang);return}if(c==='not_granted'){toast('받아쓰기 권한이 꺼져 있어요. 아티팩트 메뉴 → 권한에서 켜 주세요.');return}if(c==='unavailable'){toast('이 화면에서는 받아쓰기를 쓸 수 없어요. 크롬/엣지 또는 Claude 데스크톱 앱에서 열어 주세요.');return}if(c&&c!=='stopped'&&c!=='dismissed')toast('받아쓰기 오류: '+c)}
+function dictLang(l){if(!DICT.ns)return;DICT.lang=l;DICT.tap=false;DICT.ns.stop().catch(()=>{});DICT.ns.start({language:l}).catch(dictErr)}
+function dictNeedTap(l){DICT.lang=l;DICT.tap=true;const s=$('#cstate');if(s)s.textContent='🎙️ 화면을 한 번 누르면 이어서 들어요';
+ const go=()=>{document.removeEventListener('pointerdown',go,true);document.removeEventListener('keydown',go,true);if(!DICT.tap)return;DICT.tap=false;DICT.ns.stop().catch(()=>{});DICT.ns.start({language:DICT.lang}).catch(dictErr);if(CALL.on&&CALL.state==='listening')setState('listening')};
+ document.addEventListener('pointerdown',go,true);document.addEventListener('keydown',go,true)}
+function dictEcho(t){if(!CALL.on||!CALL.joyText)return false;const jw=new Set(wordsOf(CALL.joyText)),w=wordsOf(t);if(w.length<2)return false;return w.filter(x=>jw.has(x)).length/w.length>.7}
+class DictSR{constructor(){this.lang='en-US';this.continuous=true;this.interimResults=true;this.maxAlternatives=1;this.onresult=null;this.onerror=null;this.onend=null;this._f=[];this._p='';this._n=0;this._live=false}
+ start(){if(DICT.cur&&DICT.cur!==this)DICT.cur._detach();DICT.cur=this;this._live=true;this._t0=Date.now();
+  if(!DICT.ns.active()){DICT.ns.start({language:DICT.lang}).catch(e=>{dictErr(e);if(DICT.cur!==this)return;const c=e&&e.code;if(c==='no_gesture')return;this._live=false;DICT.cur=null;this.onerror&&this.onerror({error:c==='not_granted'?'not-allowed':String(c)});this.onend&&this.onend()})}}
+ _final(t){if(!this._live||Date.now()-this._t0<350||!t.trim()||dictEcho(t)){this._p='';return}this._f.push(t.trim());this._p='';this._emit()}
+ _partial(t){if(!this._live)return;if(t&&dictEcho(t))return;this._p=t||'';this._emit()}
+ _emit(){const res=this._f.map(x=>Object.assign([{transcript:x}],{isFinal:true}));if(this._p)res.push(Object.assign([{transcript:this._p}],{isFinal:false}));const ev={results:res,resultIndex:this._n};this._n=this._f.length;this.onresult&&this.onresult(ev)}
+ _detach(){if(!this._live)return;this._live=false;if(DICT.cur===this)DICT.cur=null;const f=this.onend;setTimeout(()=>f&&f.call(this),0)}
+ stop(){const was=this._live;this._detach();if(was&&!CALL.on&&DICT.ns&&DICT.ns.active())DICT.ns.stop().catch(()=>{})}
+ abort(){this.stop()}}
+function dictInit(d){DICT.ns=d;SR=DictSR;
+ d.onPartial(e=>{DICT.cur&&DICT.cur._partial(e.text)});d.onFinal(e=>{DICT.cur&&DICT.cur._final(e.text)});
+ d.onState(e=>{if(e.state==='idle'&&CALL.on&&['hidden','viewer_stopped','time_limit','upstream_error','rate_limited'].includes(e.reason)){if(e.reason==='viewer_stopped'){endCall();return}dictNeedTap(DICT.lang)}})}
+
+// ================= 🗂️ 기록 저장소 (claude.ai 아티팩트 db) — Claude가 이 대화에서 직접 읽고 코치 노트를 씀 =================
+var DBX={db:null,t:null,busy:false,again:false};
+async function dbInit(){try{const db=await claude.use('db');if(!db)return;DBX.db=db;
+  const s=await db.doc('speak/state').get().catch(()=>null);
+  if(s&&s.exists){stampChat();const keep=ST.coach;const m=mergeST(stripST(ST),JSON.parse(JSON.stringify(s.data())));Object.keys(ST).forEach(x=>delete ST[x]);Object.assign(ST,m);if(keep)ST.coach=keep;ST.mem=ST.mem||{facts:[],weak:{},sess:[]};ST.mem.sess=ST.mem.sess||[];ST.chat=ST.chat||[];ST.misDone=ST.misDone||{};if(ST.mis===undefined)ST.mis=null;try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}
+   if(stSig(ST)!==stSig(s.data()))dbSoon(1500)}else dbSoon(1500);
+  db.doc('speak/coach').onSnapshot(sn=>{if(!sn.exists)return;ST.coach=JSON.parse(JSON.stringify(sn.data()));try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}const c=document.getElementById('coachBox');if(c){c.innerHTML=coachCard();c.querySelectorAll('[data-csp]').forEach(b=>b.onclick=()=>speak(b.dataset.csp))}},()=>{});
+  if(!CALL.on&&tab==='joy')pJoy()}catch(e){}}
+function dbSoon(ms){if(typeof DBX==='undefined'||!DBX||!DBX.db)return;clearTimeout(DBX.t);DBX.t=setTimeout(dbPush,ms||8000)}
+async function dbPush(){if(!DBX.db)return;if(DBX.busy){DBX.again=true;return}DBX.busy=true;try{await DBX.db.doc('speak/state').set(stripST(ST))}catch(e){}DBX.busy=false;if(DBX.again){DBX.again=false;dbSoon(3000)}}
+
+// ================= 🧠 수석 코치 (Claude): 3턴마다 대화를 분석해 Joy의 다음 전략을 세움 =================
+var BR={busy:false,n:0};
+function brainTick(){if(!AI)return;BR.n++;if(BR.busy||BR.n<3)return;BR.n=0;coachBrain()}
+async function coachBrain(){BR.busy=true;const box=document.getElementById('brainBox');if(box)box.classList.add('thinking');
+ try{const j=await AI.json(`You are the lead OPIc speaking coach (target grade: IH) supervising a live English voice call between the tutor Joy and the student. Student: ${ME}.
+${ST.coach&&(ST.coach.focus||[]).length?'Human coach focus this week: '+ST.coach.focus.join('; ')+'\n':''}His frequent mistakes: ${topWeak(4).map(x=>x[0]).join(', ')||'none recorded yet'}.
+Recent conversation:
+${chatHist(14)}
+
+Your job: decide how Joy should RAISE his level over the next 2-3 turns, like an elite 1:1 tutor, without breaking the natural flow.
+OPIc IH ladder: describe -> routine/habit -> past experience told as a story -> comparison (past vs now, here vs there) -> opinion with reasons / social issue -> unexpected problem role-play. Move him one step up when his recent answers were solid (long enough, mostly correct past tense, connected); stay or simplify if he struggled.
+Return JSON only: {"stage":"current step on the ladder","plan":"concrete English instruction for Joy for the next 2-3 turns: what to ask, which detail to dig into, which structure or tense to elicit","next_q":"one strong, natural follow-up question Joy could ask next","target":{"en":"one useful IH-level expression for him to try next","ko":"뜻"},"upgrade":{"you":"short quote of his last real answer","ih":"the same content rewritten at IH level: 3-4 natural spoken sentences, first person, connected, past tense where needed"},"note_ko":"학습자에게 보여줄 한국어 코칭 한 문장 (지금 잘하는 점 + 다음 한 걸음)"}`,{modelTier:'default',cache:false,max:1600});
+  if(j&&j.plan){ST.brain=Object.assign({at:Date.now()},j);save();brainPaint()}}
+ catch(e){}finally{BR.busy=false;const b=document.getElementById('brainBox');if(b)b.classList.remove('thinking')}}
+function brainExtra(){const B=ST.brain;if(!B||!B.plan||Date.now()-(B.at||0)>40*60e3)return'';
+ return `Lead coach's plan for the next turns (follow it naturally; never mention a coach or a plan):\n${B.plan}\n${B.next_q?'A strong follow-up you can adapt to what he just said: '+B.next_q+'\n':''}${B.target&&B.target.en?'Help him use this expression soon (model it once naturally, then give him a chance): "'+B.target.en+'"\n':''}`}
+function brainInner(){
+ if(!AI)return `<h3>🤖 Joy 엔진 <span class="mini">· 무료 · GitHub Actions</span></h3><p class="note">지금은 <b>오프라인 Joy</b>(미리 써 둔 문장)로 대화 중이에요. ${ST.pack?`GitHub Actions가 매일 새벽 만든 <b>오늘의 대화 팩</b>(${esc(ST.pack.date||'')})으로 Joy가 대화해요. 대화 기록은 비공개 저장소에 쌓이고, 내일 팩은 오늘 대화를 반영해 만들어져요.`:'아래 <b>☁️ 기억 동기화</b>에 토큰을 넣으면 GitHub Actions가 매일 만든 대화 팩을 받아 Joy가 내 이야기에 맞춰 대화해요.'}</p>`;
+ const B=ST.brain,on=AI_MODE==='claude'?'claude.ai 연결':'Claude 연결됨';
+ if(!B)return `<h3>🧠 실시간 코치 <span class="mini">· Claude · ${on}</span></h3><p class="mini">Joy와 3번 주고받으면 Claude가 대화를 분석해 수준을 한 단계씩 끌어올리는 전략을 세우고, 내 답변을 IH 수준으로 바꿔 보여줘요.</p>`;
+ const U=B.upgrade||{};
+ return `<h3>🧠 실시간 코치 <span class="mini">· ${esc(B.stage||'')}</span></h3>${B.note_ko?`<p class="note" style="margin-bottom:8px">${esc(B.note_ko)}</p>`:''}
+ ${U.ih?`<p class="mini"><b>내 답변 → IH 버전</b>${U.you?` · <s>${esc(U.you)}</s>`:''}</p><p style="font-size:14px;line-height:1.6;margin:4px 0">${esc(U.ih)}</p><div class="row"><button type="button" class="btn sm" data-bsp="ih">▶ 듣기</button><button type="button" class="btn sm" data-brp="ih">🔁 따라 말하기</button></div>`:''}
+ ${B.target&&B.target.en?`<p class="mini" style="margin-top:8px"><b>다음에 써 볼 표현</b></p><button type="button" class="btn sm" data-bsp="t">🔊 ${esc(B.target.en)}</button> <span class="mini">${esc(B.target.ko||'')}</span>`:''}`}
+function bindBrain(){const B=ST.brain||{};document.querySelectorAll('[data-bsp]').forEach(b=>b.onclick=()=>speak(b.dataset.bsp==='ih'?(B.upgrade||{}).ih:(B.target||{}).en));
+ document.querySelectorAll('[data-brp]').forEach(b=>b.onclick=()=>repeatCheck((B.upgrade||{}).ih,b))}
+function brainPaint(){const b=document.getElementById('brainBox');if(b){b.innerHTML=brainInner();bindBrain()}}
+
+// ================= ☁️ 기기 간 기억 동기화 (비공개 GitHub 저장소) + Claude 코치 연동 =================
+// memory.json : 앱이 자동 저장 (대화·기억·통화 요약·기록)   coach.json : Claude가 쓴 코치 노트 (앱은 읽기만)
+var GHS={tok:'',repo:'yunsub2002/speakup-data',t:null,busy:false,dirty:false,last:'',err:''};
+try{GHS.tok=localStorage.getItem('sui_gh')||'';GHS.repo=localStorage.getItem('sui_ghrepo')||GHS.repo;GHS.last=localStorage.getItem('sui_ghlast')||''}catch(e){}
+function syncSoon(){dbSoon();if(typeof GHS==='undefined'||!GHS||!GHS.tok)return;GHS.dirty=true;clearTimeout(GHS.t);const go=()=>{if(CALL.on){GHS.t=setTimeout(go,60000);return}syncNow(true)};GHS.t=setTimeout(go,45000)}
+function b64e(s){const b=new TextEncoder().encode(s);let x='';for(let i=0;i<b.length;i+=0x8000)x+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(x)}
+function b64d(s){const bin=atob(String(s).replace(/\s/g,''));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new TextDecoder().decode(u)}
+function ghFetch(path,opt){opt=opt||{};return fetch(`https://api.github.com/repos/${GHS.repo}/contents/${path}`,{method:opt.method||'GET',cache:'no-store',body:opt.body,
+ headers:Object.assign({'Authorization':'Bearer '+GHS.tok,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},opt.body?{'Content-Type':'application/json'}:{})})}
+function ghErr(r){return new Error(r.status===401?'토큰이 올바르지 않거나 만료됐어요':r.status===403?'토큰 권한(Contents 읽기·쓰기)을 확인하세요':r.status===404?'저장소를 찾을 수 없어요 (이름·토큰 대상 저장소 확인)':'GitHub 오류 '+r.status)}
+async function ghGet(path){const r=await ghFetch(path);if(r.status===404){const rr=await fetch(`https://api.github.com/repos/${GHS.repo}`,{headers:{'Authorization':'Bearer '+GHS.tok}});if(!rr.ok)throw ghErr(rr);return {json:null,sha:null}}
+ if(!r.ok)throw ghErr(r);const j=await r.json();let d=null;try{d=JSON.parse(b64d(j.content||''))}catch(e){}return {json:d,sha:j.sha}}
+function ghPut(path,obj,sha,msg){return ghFetch(path,{method:'PUT',body:JSON.stringify({message:msg,content:b64e(JSON.stringify(obj,null,1)),...(sha?{sha}:{})})})}
+function stSig(s){s=s||{};const m=s.mem||{},d=s.days||{};return JSON.stringify([(s.chat||[]).filter(x=>!x.live&&x.t).length,((s.chat||[]).slice(-1)[0]||{}).at||0,(m.facts||[]).length,(m.sess||[]).length,Object.values(m.weak||{}).reduce((a,b)=>a+b,0),s.words||0,s.sessions||0,Object.keys(d).length,Object.values(d).reduce((a,x)=>a+(x.talk||0)+(x.shadow||0)+(x.mockq||0),0),(s.calls||[]).length,(s.mocks||[]).length,s.chatClr||0,s.memClr||0,(s.mis||{}).id||''])}
+function stripST(s){const o=JSON.parse(JSON.stringify(s||{}));o.chat=(o.chat||[]).filter(m=>!m.live&&m.t);delete o.coach;delete o.pack;delete o.packPos;return o}
+function mergeST(a,b){ // a=이 기기, b=저장소 → 합치기 (어느 쪽 기록도 잃지 않게)
+ a=a||{};b=b||{};const newer=(a.upd||0)>=(b.upd||0)?a:b,older=newer===a?b:a;const o=Object.assign({},older,newer);
+ const mx=(x,y)=>Math.max(+x||0,+y||0);o.words=mx(a.words,b.words);o.sessions=mx(a.sessions,b.sessions);o.upd=mx(a.upd,b.upd);
+ o.days={};new Set([...Object.keys(a.days||{}),...Object.keys(b.days||{})]).forEach(k=>{const x=(a.days||{})[k]||{},y=(b.days||{})[k]||{};o.days[k]={};new Set([...Object.keys(x),...Object.keys(y)]).forEach(f=>o.days[k][f]=mx(x[f],y[f]))});
+ const uni=(p,q,key,n)=>{const m=new Map();(p||[]).concat(q||[]).forEach(x=>{const k=key(x);if(!m.has(k))m.set(k,x)});const L=[...m.values()];return n?L.slice(-n):L};
+ o.mocks=uni(b.mocks,a.mocks,x=>JSON.stringify(x),60);o.calls=uni(b.calls,a.calls,x=>[x.date,x.sec,x.turns].join('|'),60);o.misDone=Object.assign({},b.misDone,a.misDone);
+ o.chatClr=mx(a.chatClr,b.chatClr);o.memClr=mx(a.memClr,b.memClr);
+ o.chat=uni(b.chat,a.chat,m=>(m.at||0)+'|'+m.r,0).filter(m=>(m.at||0)>o.chatClr).sort((x,y)=>(x.at||0)-(y.at||0)).slice(-60);
+ const ma=a.mem||{},mb=b.mem||{};
+ if((a.memClr||0)>(b.upd||0)&&(a.memClr||0)>=(b.memClr||0))o.mem=ma;else if((b.memClr||0)>(a.upd||0)&&(b.memClr||0)>(a.memClr||0))o.mem=mb;
+ else{const f=uni(mb.facts,ma.facts,x=>String(x).toLowerCase(),40);const w=Object.assign({},mb.weak);Object.entries(ma.weak||{}).forEach(([k,v])=>w[k]=mx(w[k],v));
+  o.mem={facts:f,weak:w,sess:uni(mb.sess,ma.sess,s=>s.at+'|'+s.sum,0).sort((x,y)=>(x.at||0)-(y.at||0)).slice(-12)};
+  (o.mem.sess||[]).forEach(s=>{if([...(ma.sess||[]),...(mb.sess||[])].some(z=>z.at===s.at&&z.used))s.used=1})}
+ o.mem.sess=o.mem.sess||[];return o}
+async function syncNow(quiet){
+ if(!GHS.tok||GHS.busy)return false;GHS.busy=true;clearTimeout(GHS.t);GHS.err='';ghBadge('동기화 중…');
+ try{
+  for(let k=0;k<3;k++){
+   stampChat();const {json:rem,sha}=await ghGet('memory.json');
+   if(rem){const keep=ST.coach,keepP=ST.pack,keepPP=ST.packPos;const m=mergeST(stripST(ST),rem);Object.keys(ST).forEach(x=>delete ST[x]);Object.assign(ST,m);if(keep)ST.coach=keep;if(keepP){ST.pack=keepP;ST.packPos=keepPP||{}}ST.mem=ST.mem||{facts:[],weak:{},sess:[]};ST.mem.sess=ST.mem.sess||[];ST.chat=ST.chat||[];ST.misDone=ST.misDone||{};if(ST.mis===undefined)ST.mis=null}
+   try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}
+   if(rem&&!GHS.dirty&&stSig(ST)===stSig(rem))break;
+   const r=await ghPut('memory.json',stripST(ST),sha,'Speak Up 기록 동기화 '+new Date().toLocaleString('ko-KR'));
+   if(r.ok){GHS.dirty=false;break}
+   if(r.status===409||r.status===422)continue;throw ghErr(r)}
+  try{const c=await ghGet('coach.json');if(c.json){ST.coach=c.json;try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}}}catch(e){}
+  try{const pk=await ghGet('pack.json');if(pk.json&&(!ST.pack||ST.pack.date!==pk.json.date)){ST.pack=pk.json;ST.packPos={};try{localStorage.setItem('sui',JSON.stringify(ST))}catch(e){}}}catch(e){}
+  GHS.last=new Date().toLocaleString('ko-KR');try{localStorage.setItem('sui_ghlast',GHS.last)}catch(e){}
+  if(!quiet)toast('동기화 완료! 다른 기기에서도 이어서 대화할 수 있어요.')
+ }catch(e){GHS.err=e.message||'네트워크 오류';if(!quiet)toast('동기화 실패: '+GHS.err)}
+ finally{GHS.busy=false;ghBadge()}
+ return !GHS.err}
+function ghStatus(){return GHS.tok?(GHS.err?'⚠️ '+esc(GHS.err):'✅ 연결됨 · 마지막 동기화 '+esc(GHS.last||'아직 없음')):'⚪ 연결 안 됨 · 지금은 이 브라우저에만 저장 중'}
+function ghBadge(t){const e=document.getElementById('ghStat');if(e)e.innerHTML=t?esc(t):ghStatus()}
+function bindGH(){
+ const s=$('#ghSave');if(s)s.onclick=async()=>{const tk=$('#ghTok').value.trim(),rp=$('#ghRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');if(!tk){toast('토큰을 입력하세요');return}
+  GHS.tok=tk;GHS.repo=rp||GHS.repo;GHS.dirty=true;try{localStorage.setItem('sui_gh',GHS.tok);localStorage.setItem('sui_ghrepo',GHS.repo)}catch(_){}s.disabled=true;s.textContent='동기화 중…';await syncNow(false);pJoy()};
+ const n=$('#ghNow');if(n)n.onclick=async()=>{GHS.dirty=true;await syncNow(false);pJoy()};
+ const d=$('#ghDel');if(d)d.onclick=()=>{GHS.tok='';try{localStorage.removeItem('sui_gh')}catch(_){}toast('연결을 해제했어요. 기록은 이 브라우저에 남아 있어요.');pJoy()};
+ document.querySelectorAll('[data-csp]').forEach(b=>b.onclick=()=>speak(b.dataset.csp))}
+// ---- Claude 코치 노트 (coach.json) ----
+function packCard(){const P=ST.pack;if(!P)return'';const A=P.answers||[];
+ return `<div class="card"><details><summary style="cursor:pointer;font-weight:700">📦 오늘의 대화 팩 <span class="mini">· ${esc(P.date||'')} · GitHub Actions</span></summary>
+ <p class="mini" style="margin:6px 0">Joy가 오늘 이 질문들로 묘사 → 습관 → 경험 → 비교 → 의견 순서로 이어서 물어요.</p>
+ ${(P.chains||[]).map(c=>`<p class="mini" style="margin-top:6px"><b>${esc(c.topic_ko||c.topic)}</b></p><ol class="memli" style="padding-left:18px">${c.ladder.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>`).join('')}
+ ${A.length?`<p class="mini" style="margin-top:8px"><b>IH 모범답안</b> · 듣고 따라 말해 보세요</p>${A.map((a,i)=>`<div class="fix" style="margin-top:6px"><div class="mini">Q. ${esc(a.q)}</div><div style="font-size:13.5px;margin-top:4px">${esc(a.a)}</div><div class="tools" style="margin-top:4px"><button type="button" data-pka="${i}">▶ 듣기</button> <button type="button" data-pkr="${i}">🔁 따라 말하기</button></div></div>`).join('')}`:''}</details></div>`}
+function coachCard(){const C=ST.coach;if(!C)return'';
+ return `<div class="card"><h3>🧑‍🏫 코치 노트 <span class="mini">· ${esc(C.by||'Claude')} · ${esc(C.updated||'')}</span></h3>${C.level?`<p class="mini" style="margin-bottom:6px">추정 등급 <b>${esc(C.level)}</b>${C.stage?` · 다음 단계 <b>${esc(C.stage)}</b>`:''}</p>`:''}${C.note_ko?`<p class="note" style="margin-bottom:8px">${esc(C.note_ko)}</p>`:''}
+ ${(C.focus_ko||[]).length?`<ul class="memli">${C.focus_ko.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:''}
+ ${(C.targets||[]).length?`<p class="mini" style="margin-top:8px"><b>이번 주 써 볼 표현</b> · Joy가 대화 중에 자연스럽게 유도해요</p><div class="row" style="margin-top:4px">${C.targets.map(x=>`<button type="button" class="btn sm" data-csp="${esc(x.en||x)}" title="${esc(x.ko||'')}">🔊 ${esc(x.en||x)}</button>`).join('')}</div>`:''}</div>`}
+function joyMemExtra(){
+ const S=(ST.mem.sess||[]).slice(-3).map(s=>`- ${s.d}: ${s.sum}${s.open?' (unfinished thread: '+s.open+')':''}`).join('\n');
+ const C=ST.coach;const ct=C?[C.level?'His estimated OPIc level now: '+C.level+(C.stage?'. Practice stage to push toward: '+C.stage:''):'',(C.focus||[]).length?'Focus: '+C.focus.join('; '):'',(C.targets||[]).length?'Expressions to get him using (model one naturally when it fits, then give him a chance to use it): '+C.targets.map(x=>x.en||x).join(' | '):'',(C.topics||[]).length?'Good topics for him: '+C.topics.join(', '):'',C.joy||''].filter(Boolean).join('\n'):'';
+ const PK=ST.pack&&(ST.pack.chains||[]).length?`Today's question ladder you can draw from when it fits naturally:\n${ST.pack.chains.map(c=>'- '+c.topic+': '+c.ladder.join(' / ')).join('\n')}\n`:'';
+ return PK+(S?`Your recent calls with him (refer back naturally, like a friend who remembers; don't repeat the same follow-up twice):\n${S}\n`:'')+(ct?`Notes from his human coach (follow them, without mentioning the coach):\n${ct}\n`:'')}
+function sessHTML(){const S=(ST.mem.sess||[]).slice(-3).reverse();if(!S.length)return'';
+ return `<p class="mini" style="margin-top:8px"><b>최근 통화</b></p><ul class="memli">${S.map(s=>`<li><b>${esc(s.d)}</b> ${esc(s.sum)}${s.lv?`<br><span class="mini">${esc(s.lv)}</span>`:''}</li>`).join('')}</ul>${S[0].next&&!S[0].used?`<p class="mini">📞 다음 통화 첫마디: "${esc(S[0].next)}"</p>`:''}`}
+// ---- 통화 요약 → 다음 통화를 지난 이야기에서 이어 시작 ----
+async function summarizeCall(i0){
+ if(!AI)return;const tx=ST.chat.slice(i0).filter(m=>m.t&&!m.coach&&!m.drill).map(m=>(m.r==='me'?'Student: ':'Joy: ')+m.t).join('\n').slice(-6000);
+ if(tx.length<60)return;
+ try{const j=await AI.json(`You are Joy, an English tutor on voice calls with your Korean student Yunsub (goal: OPIc IH). Summarize the call below so that next time you can continue naturally, like a real person who remembers.
+Call transcript:
+${tx}
+JSON: {"sum":"one short English sentence: what we talked about","facts":["up to 3 NEW concrete facts about his life, short"],"open":"one thread to follow up next time (unfinished story, upcoming plan, or something he promised)","next":"Joy's opening line for the NEXT call: 1-2 short spoken sentences, no greeting words, mention a concrete detail from this call, end with one open question","level":"한국어 한 문장: 오늘 말하기의 강점과 다음에 고칠 점"}`,{modelTier:'quick',max:700});
+  if(!j||!j.sum)return;
+  ST.mem.sess=(ST.mem.sess||[]).concat([{at:Date.now(),d:todayKey(),sum:String(j.sum).slice(0,200),open:String(j.open||'').slice(0,160),next:String(j.next||'').slice(0,240),lv:String(j.level||'').slice(0,160)}]).slice(-12);
+  (j.facts||[]).forEach(memFact);save();if(GHS.tok)syncNow(true)}catch(e){}}
+
 render();
+if(GHS.tok)syncNow(true).then(ok=>{if(ok&&!CALL.on&&!document.querySelector('.report')&&!document.activeElement.matches('input,textarea'))render()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&GHS.tok&&GHS.dirty)syncNow(true)});
 </script>
 </body></html>
