@@ -1,5 +1,5 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Speak Up IH v3</title>
-<!-- SPEAKUP_BUILD_V4 -->
+<!-- SPEAKUP_BUILD_V4 V6 -->
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Gothic+A1:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
@@ -308,8 +308,10 @@ const PHRASES=[
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TABS=[['home','🏠','홈'],['guide','📘','IH 공략집'],['joy','💬','Joy 프리토킹'],['mock','🎧','실전 모의고사'],['model','🗣️','모범답안 · 쉐도잉'],['phr','✨','표현 뱅크']];
-let tab='home',GH_JUST=false;try{const hs=location.hash.slice(1);const m=hs.match(/(?:^|&)gh=([A-Za-z0-9_]+)/);
- if(m){localStorage.setItem('sui_gh',m[1]);const r=hs.match(/(?:^|&)repo=([\w.-]+\/[\w.-]+)/);localStorage.setItem('sui_ghrepo',r?r[1]:'yunsub2002/speakup-data');GH_JUST=true;history.replaceState(null,'',location.pathname+'#joy')}
+let tab='home',GH_JUST=false,GH_KEEP=false;try{const qs=location.search.slice(1);const qm=qs.match(/(?:^|&)gh=([A-Za-z0-9_]+)/);
+ if(qm){const known=localStorage.getItem('sui_gh')===qm[1];localStorage.setItem('sui_gh',qm[1]);const r=qs.match(/(?:^|&)repo=([\w.-]+(?:\/|%2F)[\w.-]+)/);localStorage.setItem('sui_ghrepo',r?decodeURIComponent(r[1]):'yunsub2002/speakup-data');GH_KEEP=true;if(!known)GH_JUST=true;if(!location.hash)tab='joy'}
+ const hs=location.hash.slice(1);const m=hs.match(/(?:^|&)gh=([A-Za-z0-9_]+)/);
+ if(m){localStorage.setItem('sui_gh',m[1]);const r=hs.match(/(?:^|&)repo=([\w.-]+\/[\w.-]+)/);localStorage.setItem('sui_ghrepo',r?r[1]:'yunsub2002/speakup-data');GH_JUST=true;if(/(?:^|&)keep=1/.test(hs)){tab='joy';GH_KEEP=true}else history.replaceState(null,'',location.pathname+'#joy')}
  const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))tab=h}catch(e){}
 const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 let ST={days:{},words:0,sessions:0,mocks:[],exam:'',chat:[]};
@@ -916,7 +918,7 @@ function pJoy(){
     <p class="note" style="margin-top:8px">키는 이 브라우저에만 저장되고 HTML 파일에는 들어가지 않습니다. console.anthropic.com에서 발급 (사용량만큼 과금). AI 연결 시 실시간 스트리밍 대답 · 맞춤 힌트 · 한국어→영어 도움이 켜집니다.</p>`}</div></details></div>
    <div class="card"><details ${GHS.tok?'':'open'}><summary style="cursor:pointer;font-weight:700">☁️ GitHub 연결 ${GHS.tok?(GHS.err?'⚠️':'✅'):''}</summary><div style="margin-top:8px">
     <p class="mini" id="ghStat" style="margin-bottom:8px">${ghStatus()}</p>
-    ${GHS.tok?`<div class="row"><button class="btn sm pri" id="ghNow" type="button">⟳ 지금 동기화</button><button class="btn sm" id="ghQr" type="button">📱 폰 연결 QR</button></div><div id="qrBox" style="margin-top:8px"></div>`:`<p class="note">PC에서 <b>github_자동화\설치_GitHub자동화.bat</b> 를 실행하면 자동으로 연결돼요. 폰은 PC 화면의 <b>📱 폰 연결 QR</b> 을 카메라로 찍으면 끝.</p>`}
+    ${GHS.tok?`<div class="row"><button class="btn sm pri" id="ghNow" type="button">⟳ 지금 동기화</button><button class="btn sm" id="ghQr" type="button">📱 폰 연결 QR</button><button class="btn sm" id="ghHome" type="button">📲 홈 화면 아이콘용</button></div><div id="qrBox" style="margin-top:8px"></div>`:`<p class="note">PC에서 <b>github_자동화\설치_GitHub자동화.bat</b> 를 실행하면 자동으로 연결돼요. 폰은 PC 화면의 <b>📱 폰 연결 QR</b> 을 카메라로 찍으면 끝.</p>`}
     <details style="margin-top:8px"><summary class="mini" style="cursor:pointer">직접 입력 (고급)</summary>
     <input id="ghTok" class="inp" type="password" autocomplete="off" placeholder="GitHub 토큰" value="${esc(GHS.tok)}" style="margin-top:6px">
     <input id="ghRepo" class="inp" style="margin-top:6px" value="${esc(GHS.repo)}" aria-label="저장소">
@@ -1272,15 +1274,22 @@ async function syncNow(quiet){
  }catch(e){GHS.err=e.message||'네트워크 오류';if(!quiet)toast('동기화 실패: '+GHS.err)}
  finally{GHS.busy=false;ghBadge()}
  return !GHS.err}
+function homeGuide(){const el=document.createElement('div');el.className='report';el.setAttribute('role','dialog');
+ el.innerHTML=`<div class="card" style="max-width:420px"><span class="tag ok">✅ GitHub 연결 완료</span><h2 style="margin-top:8px;font-size:20px">홈 화면 아이콘도 연결하기</h2>
+ <ol style="margin:10px 0 0 18px;line-height:1.9;font-size:15px"><li>예전에 만든 홈 화면 아이콘이 있으면 <b>먼저 삭제</b></li><li>지금 이 화면에서 <b>공유 버튼(□↑)</b> 누르기</li><li><b>홈 화면에 추가</b> → 추가</li></ol>
+ <p class="note" style="margin-top:10px">이렇게 만든 아이콘은 열 때마다 자동으로 연결돼요. (안드로이드는 크롬 메뉴 ⋮ → 홈 화면에 추가)</p>
+ <div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn pri" type="button" id="hgOk">알겠어요</button></div></div>`;
+ document.body.appendChild(el);el.querySelector('#hgOk').onclick=()=>el.remove()}
 function ghStatus(){return GHS.tok?(GHS.err?'⚠️ '+esc(GHS.err):'✅ 연결됨 · 마지막 동기화 '+esc(GHS.last||'아직 없음')):'⚪ 연결 안 됨 · 지금은 이 브라우저에만 저장 중'}
 function ghBadge(t){const e=document.getElementById('ghStat');if(e)e.innerHTML=t?esc(t):ghStatus()}
 function bindGH(){
  const s=$('#ghSave');if(s)s.onclick=async()=>{const tk=$('#ghTok').value.trim(),rp=$('#ghRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');if(!tk){toast('토큰을 입력하세요');return}
   GHS.tok=tk;GHS.repo=rp||GHS.repo;GHS.dirty=true;try{localStorage.setItem('sui_gh',GHS.tok);localStorage.setItem('sui_ghrepo',GHS.repo)}catch(_){}s.disabled=true;s.textContent='동기화 중…';await syncNow(false);pJoy()};
  const n=$('#ghNow');if(n)n.onclick=async()=>{GHS.dirty=true;await syncNow(false);pJoy()};
- const qb=$('#ghQr');if(qb)qb.onclick=()=>{const url=location.origin+location.pathname+'#gh='+GHS.tok+'&repo='+GHS.repo;const box=$('#qrBox');box.innerHTML='<p class="mini">폰 카메라로 찍으면 폰도 자동 연결돼요. (다른 사람에게 보여 주지 마세요)</p><div id="qrImg" style="background:#fff;padding:10px;display:inline-block;margin-top:6px"></div>';
+ const qb=$('#ghQr');if(qb)qb.onclick=()=>{const url=location.origin+location.pathname+'?gh='+GHS.tok+'&repo='+GHS.repo;const box=$('#qrBox');box.innerHTML='<p class="mini">폰 카메라로 찍으면 폰도 자동 연결돼요. (다른 사람에게 보여 주지 마세요)</p><div id="qrImg" style="background:#fff;padding:10px;display:inline-block;margin-top:6px"></div>';
   const draw=()=>{try{new QRCode(document.getElementById('qrImg'),{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.L})}catch(e){box.innerHTML='<p class="mini">QR을 만들지 못했어요.</p>'}};
   if(window.QRCode)draw();else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=draw;s.onerror=()=>{box.innerHTML='<p class="mini">QR 도구를 불러오지 못했어요 (인터넷 확인).</p>'};document.head.appendChild(s)}};
+ const hb=$('#ghHome');if(hb)hb.onclick=()=>{location.href=location.origin+location.pathname+'?gh='+GHS.tok+'&repo='+GHS.repo};
  const d=$('#ghDel');if(d)d.onclick=()=>{GHS.tok='';try{localStorage.removeItem('sui_gh')}catch(_){}toast('연결을 해제했어요. 기록은 이 브라우저에 남아 있어요.');pJoy()};
  document.querySelectorAll('[data-csp]').forEach(b=>b.onclick=()=>speak(b.dataset.csp))}
 // ---- Claude 코치 노트 (coach.json) ----
@@ -1313,7 +1322,8 @@ JSON: {"sum":"one short English sentence: what we talked about","facts":["up to 
   (j.facts||[]).forEach(memFact);save();if(GHS.tok)syncNow(true)}catch(e){}}
 
 render();
-if(GH_JUST)setTimeout(()=>toast('✅ GitHub 연결 완료! 이제 대화가 자동으로 저장되고, 매일 새 대화 팩을 받아요.'),600);
+const IS_APP=(window.navigator.standalone===true)||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+if(GH_JUST||(GH_KEEP&&!IS_APP&&!sessionStorage.getItem('hg')))setTimeout(()=>{try{sessionStorage.setItem('hg','1')}catch(e){}if(GH_KEEP&&!IS_APP)homeGuide();else toast('✅ GitHub 연결 완료! 이제 대화가 자동으로 저장되고, 매일 새 대화 팩을 받아요.')},600);
 if(GHS.tok)syncNow(true).then(ok=>{if(ok&&!CALL.on&&!document.querySelector('.report')&&!document.activeElement.matches('input,textarea'))render()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&GHS.tok&&GHS.dirty)syncNow(true)});
 </script>
