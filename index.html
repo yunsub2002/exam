@@ -1,4 +1,5 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Speak Up IH v3</title>
+<!-- SPEAKUP_BUILD_V4 -->
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Gothic+A1:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
@@ -307,7 +308,9 @@ const PHRASES=[
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const TABS=[['home','🏠','홈'],['guide','📘','IH 공략집'],['joy','💬','Joy 프리토킹'],['mock','🎧','실전 모의고사'],['model','🗣️','모범답안 · 쉐도잉'],['phr','✨','표현 뱅크']];
-let tab='home';try{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))tab=h}catch(e){}
+let tab='home',GH_JUST=false;try{const hs=location.hash.slice(1);const m=hs.match(/(?:^|&)gh=([A-Za-z0-9_]+)/);
+ if(m){localStorage.setItem('sui_gh',m[1]);const r=hs.match(/(?:^|&)repo=([\w.-]+\/[\w.-]+)/);localStorage.setItem('sui_ghrepo',r?r[1]:'yunsub2002/speakup-data');GH_JUST=true;history.replaceState(null,'',location.pathname+'#joy')}
+ const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))tab=h}catch(e){}
 const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 let ST={days:{},words:0,sessions:0,mocks:[],exam:'',chat:[]};
 try{Object.assign(ST,JSON.parse(localStorage.getItem('sui')||'{}'))}catch(e){}
@@ -911,12 +914,14 @@ function pJoy(){
      <label class="mini">채점용(정밀)<input id="mD" class="inp" value="${esc(MODEL_D)}"></label></details>
     <div class="row" style="margin-top:8px"><button class="btn sm pri" id="kSave" type="button">저장 · 연결 테스트</button>${KEY?'<button class="btn sm" id="kDel" type="button">키 삭제</button>':''}</div>
     <p class="note" style="margin-top:8px">키는 이 브라우저에만 저장되고 HTML 파일에는 들어가지 않습니다. console.anthropic.com에서 발급 (사용량만큼 과금). AI 연결 시 실시간 스트리밍 대답 · 맞춤 힌트 · 한국어→영어 도움이 켜집니다.</p>`}</div></details></div>
-   <div class="card"><details ${GHS.tok?'':'open'}><summary style="cursor:pointer;font-weight:700">☁️ 기억 동기화 · Claude 코치 연동 ${GHS.tok?(GHS.err?'⚠️':'✅'):''}</summary><div style="margin-top:8px">
+   <div class="card"><details ${GHS.tok?'':'open'}><summary style="cursor:pointer;font-weight:700">☁️ GitHub 연결 ${GHS.tok?(GHS.err?'⚠️':'✅'):''}</summary><div style="margin-top:8px">
     <p class="mini" id="ghStat" style="margin-bottom:8px">${ghStatus()}</p>
-    <input id="ghTok" class="inp" type="password" autocomplete="off" placeholder="github_pat_ 로 시작하는 토큰" value="${esc(GHS.tok)}">
+    ${GHS.tok?`<div class="row"><button class="btn sm pri" id="ghNow" type="button">⟳ 지금 동기화</button><button class="btn sm" id="ghQr" type="button">📱 폰 연결 QR</button></div><div id="qrBox" style="margin-top:8px"></div>`:`<p class="note">PC에서 <b>github_자동화\설치_GitHub자동화.bat</b> 를 실행하면 자동으로 연결돼요. 폰은 PC 화면의 <b>📱 폰 연결 QR</b> 을 카메라로 찍으면 끝.</p>`}
+    <details style="margin-top:8px"><summary class="mini" style="cursor:pointer">직접 입력 (고급)</summary>
+    <input id="ghTok" class="inp" type="password" autocomplete="off" placeholder="GitHub 토큰" value="${esc(GHS.tok)}" style="margin-top:6px">
     <input id="ghRepo" class="inp" style="margin-top:6px" value="${esc(GHS.repo)}" aria-label="저장소">
-    <div class="row" style="margin-top:8px"><button class="btn sm pri" id="ghSave" type="button">저장 · 지금 동기화</button>${GHS.tok?'<button class="btn sm" id="ghNow" type="button">⟳ 동기화</button><button class="btn sm" id="ghDel" type="button">연결 해제</button>':''}</div>
-    <p class="note" style="margin-top:8px">대화 기록·Joy의 기억·통화 요약을 <b>비공개</b> GitHub 저장소에 자동 저장합니다. PC·폰 어디서 열어도 이어서 대화하고, Claude가 남긴 <b>코치 노트</b>를 받아 Joy가 그대로 지도해요. 토큰은 이 브라우저에만 저장됩니다.</p></div></details></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm" id="ghSave" type="button">저장 · 동기화</button>${GHS.tok?'<button class="btn sm" id="ghDel" type="button">연결 해제</button>':''}</div></details>
+    <p class="note" style="margin-top:8px">대화 기록은 <b>비공개</b> 저장소에 자동 저장되고, GitHub Actions가 매일 새벽 내 대화를 반영한 <b>대화 팩</b>과 <b>코치 노트</b>를 만들어 Joy가 그대로 이어갑니다.</p></div></details></div>
    <div class="card"><details><summary style="cursor:pointer;font-weight:700">🧠 Joy가 기억하는 나 (${ST.mem.facts.length})</summary>${sessHTML()}${ST.mem.facts.length?`<ul class="memli">${ST.mem.facts.slice(-6).reverse().map(f=>`<li>${esc(f)}</li>`).join('')}</ul>`:'<p class="mini" style="margin-top:6px">대화에서 알게 된 내 이야기를 기억해 두었다가 다음 대화에서 먼저 물어봐요.</p>'}${topWeak(3).length?`<p class="mini" style="margin-top:8px"><b>자주 틀리는 것</b>: ${topWeak(3).map(x=>esc(x[0])+' ×'+x[1]).join(' · ')}</p>`:''}<button class="btn sm" id="memClr" type="button" style="margin-top:8px">기억 지우기</button></details></div>
    <div class="card"><h3>오늘의 기록</h3><b style="font-family:var(--f-disp);font-size:28px">${day().talk}</b> <span class="mini">문장 · ${day().words} 단어 · 통화 ${cMin}분</span></div>
   </aside></div>`;
@@ -1273,6 +1278,9 @@ function bindGH(){
  const s=$('#ghSave');if(s)s.onclick=async()=>{const tk=$('#ghTok').value.trim(),rp=$('#ghRepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');if(!tk){toast('토큰을 입력하세요');return}
   GHS.tok=tk;GHS.repo=rp||GHS.repo;GHS.dirty=true;try{localStorage.setItem('sui_gh',GHS.tok);localStorage.setItem('sui_ghrepo',GHS.repo)}catch(_){}s.disabled=true;s.textContent='동기화 중…';await syncNow(false);pJoy()};
  const n=$('#ghNow');if(n)n.onclick=async()=>{GHS.dirty=true;await syncNow(false);pJoy()};
+ const qb=$('#ghQr');if(qb)qb.onclick=()=>{const url=location.origin+location.pathname+'#gh='+GHS.tok+'&repo='+GHS.repo;const box=$('#qrBox');box.innerHTML='<p class="mini">폰 카메라로 찍으면 폰도 자동 연결돼요. (다른 사람에게 보여 주지 마세요)</p><div id="qrImg" style="background:#fff;padding:10px;display:inline-block;margin-top:6px"></div>';
+  const draw=()=>{try{new QRCode(document.getElementById('qrImg'),{text:url,width:200,height:200,correctLevel:QRCode.CorrectLevel.L})}catch(e){box.innerHTML='<p class="mini">QR을 만들지 못했어요.</p>'}};
+  if(window.QRCode)draw();else{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=draw;s.onerror=()=>{box.innerHTML='<p class="mini">QR 도구를 불러오지 못했어요 (인터넷 확인).</p>'};document.head.appendChild(s)}};
  const d=$('#ghDel');if(d)d.onclick=()=>{GHS.tok='';try{localStorage.removeItem('sui_gh')}catch(_){}toast('연결을 해제했어요. 기록은 이 브라우저에 남아 있어요.');pJoy()};
  document.querySelectorAll('[data-csp]').forEach(b=>b.onclick=()=>speak(b.dataset.csp))}
 // ---- Claude 코치 노트 (coach.json) ----
@@ -1305,6 +1313,7 @@ JSON: {"sum":"one short English sentence: what we talked about","facts":["up to 
   (j.facts||[]).forEach(memFact);save();if(GHS.tok)syncNow(true)}catch(e){}}
 
 render();
+if(GH_JUST)setTimeout(()=>toast('✅ GitHub 연결 완료! 이제 대화가 자동으로 저장되고, 매일 새 대화 팩을 받아요.'),600);
 if(GHS.tok)syncNow(true).then(ok=>{if(ok&&!CALL.on&&!document.querySelector('.report')&&!document.activeElement.matches('input,textarea'))render()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&GHS.tok&&GHS.dirty)syncNow(true)});
 </script>
